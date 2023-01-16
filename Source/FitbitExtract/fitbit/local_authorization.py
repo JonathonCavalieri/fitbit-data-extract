@@ -2,13 +2,14 @@ from hashlib import sha256
 from base64 import urlsafe_b64encode
 from random import choice, randint
 from string import digits, ascii_letters
-import webbrowser
 from urllib.parse import urlencode
 import re
-import requests
-from json import dump
 
-from constants import *
+# installed packages
+import requests
+
+# local dependencies
+from fitbit.constants import POSSIBLE_SCOPES, AUTHORIZATION_URL, TOKEN_URL
 
 
 def generate_code_verifier() -> str:
@@ -22,7 +23,7 @@ def generate_code_verifier() -> str:
     return "".join(choice(possible_chars) for _ in range(length))
 
 
-def generate_code_challenge(code_verifier: str) -> str:
+def generate_code_challenge(code_verifier: str) -> tuple:
     """Transforms the code_verifier into a code challenge
     by hashing the string then base64 urls encoding omitting the final =
 
@@ -110,6 +111,12 @@ def get_access_token(
     Returns:
         str: access and refresh token in json format
     """
+    if client_id is None or not client_id:
+        raise ValueError("Client id must be filled in")
+
+    if client_secret is None or not client_secret:
+        raise ValueError("Client secret must be filled in")
+
     body = {
         "client_id": client_id,
         "code": authorization_code,
@@ -118,30 +125,12 @@ def get_access_token(
     }
     headers = {"Content-type": "application/x-www-form-urlencoded"}
     response = requests.post(
-        TOKEN_URL, headers=headers, data=body, auth=(client_id, client_secret)
+        TOKEN_URL,
+        headers=headers,
+        data=body,
+        timeout=600,
+        auth=(client_id, client_secret),
     )
 
     response.raise_for_status()
     return response.json()
-
-
-def main() -> None:
-    client_id = input("Enter Client Id: ")
-    client_secret = input("Enter Client Secret: ")
-    scopes = input("Enter Scopes: ")
-    code_verifier = generate_code_verifier()
-    auth_url = generate_authorization_request(client_id, scopes, code_verifier)
-    webbrowser.open(auth_url, new=0, autoraise=True)
-    returned_url = input("Paste response from callback: ")
-    authorization_code = parse_return_url(returned_url)
-
-    tokens = get_access_token(
-        client_id, client_secret, code_verifier, authorization_code
-    )
-
-    with open("local_data/token.json", "w", encoding="utf-8") as f:
-        dump(tokens, f, ensure_ascii=False, indent=4)
-
-
-if __name__ == "__main__":
-    main()

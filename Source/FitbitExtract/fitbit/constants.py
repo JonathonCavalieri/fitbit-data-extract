@@ -18,3 +18,5 @@ POSSIBLE_SCOPES = [
 AUTHORIZATION_URL = "https://www.fitbit.com/oauth2/authorize"
 
 TOKEN_URL = "https://api.fitbit.com/oauth2/token"
+
+WEB_API_URL = "https://api.fitbit.com/1"

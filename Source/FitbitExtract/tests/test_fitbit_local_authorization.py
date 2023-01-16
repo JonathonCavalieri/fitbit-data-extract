@@ -1,9 +1,10 @@
-from string import digits, ascii_letters
 import re
-import pytest
-
+from string import ascii_letters, digits
+from http import HTTPStatus
+from requests.exceptions import HTTPError
 import fitbit.local_authorization as auth
-from fitbit.constants import *
+import pytest
+from fitbit.constants import POSSIBLE_SCOPES, TOKEN_URL
 
 
 def test_generate_code_challenge() -> None:
@@ -83,3 +84,58 @@ def test_parse_return_url_bad_url() -> None:
 
     with pytest.raises(ValueError, match="Could not parse token from provided url"):
         auth.parse_return_url(url)
+
+
+def test_get_access_token(requests_mock) -> None:
+    """
+    Test the get_access_token function to check that it returns a response for http OK
+    """
+    requests_mock.post(
+        TOKEN_URL,
+        json={"access_token": "test_access_token"},
+        status_code=HTTPStatus.OK,
+    )
+
+    access_token = auth.get_access_token(
+        "test_id", "test_secret", "test_verifier", "test_code"
+    )
+
+    assert access_token == {"access_token": "test_access_token"}
+
+
+def test_get_access_token_no_client_id() -> None:
+    """
+    Test the get_access_token function to check missing client id case is handled
+    """
+
+    with pytest.raises(ValueError, match="Client id must be filled in"):
+        auth.get_access_token("", "test_secret", "test_verifier", "test_code")
+
+    with pytest.raises(ValueError, match="Client id must be filled in"):
+        auth.get_access_token(None, "test_secret", "test_verifier", "test_code")
+
+
+def test_get_access_token_no_client_secret() -> None:
+    """
+    Test the get_access_token function to check missing client secret case is handled
+    """
+
+    with pytest.raises(ValueError, match="Client secret must be filled in"):
+        auth.get_access_token("test_id", "", "test_verifier", "test_code")
+
+    with pytest.raises(ValueError, match="Client secret must be filled in"):
+        auth.get_access_token("test_id", None, "test_verifier", "test_code")
+
+
+def test_get_access_token_bad_status(requests_mock) -> None:
+    """
+    Test the get_access_token function to check that it returns a response for when http status is no OK
+    """
+    requests_mock.post(
+        TOKEN_URL,
+        json={"access_token": "test_access_token"},
+        status_code=HTTPStatus.BAD_GATEWAY,
+    )
+
+    with pytest.raises(HTTPError):
+        auth.get_access_token("test_id", "test_secret", "test_verifier", "test_code")
