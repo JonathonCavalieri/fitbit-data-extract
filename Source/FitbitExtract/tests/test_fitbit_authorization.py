@@ -8,7 +8,11 @@ from requests.exceptions import HTTPError
 
 from fitbit.constants import TOKEN_URL
 import fitbit.authorization as auth
-from tests.fixtures import api_credentials, api_token, local_token_manager
+from tests.fixtures import (  # pylint: disable=W0611
+    api_credentials,
+    api_token,
+    local_token_manager,
+)
 
 
 ###########################################

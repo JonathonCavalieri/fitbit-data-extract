@@ -1,6 +1,6 @@
 import webbrowser
 
-from fitbit.authorization import FitbitToken, save_local_token
+from fitbit.authorization import FitbitToken, LocalTokenManager
 from fitbit.local_authorization import (
     generate_authorization_request,
     generate_code_verifier,
@@ -24,13 +24,14 @@ def main() -> None:
     )
 
     fitbit_token = FitbitToken(
-        token["access_token"],
         token["refresh_token"],
+        token["access_token"],
         token["scope"],
         token["user_id"],
         access_token_isvalid=True,
     )
-    save_local_token(fitbit_token)
+    token_manager = LocalTokenManager()
+    token_manager.save_token(fitbit_token)
 
 
 if __name__ == "__main__":

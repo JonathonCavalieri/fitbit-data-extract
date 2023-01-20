@@ -61,7 +61,7 @@ class TokenManager(Protocol):
     def load_token(self, parameters: dict) -> FitbitToken:
         """Load API Token from storage"""
 
-    def save_token(self, token: FitbitToken, parameters: dict) -> None:
+    def save_token(self, token: FitbitToken, parameters: dict = None) -> None:
         """Save API Token to storage"""
 
 
@@ -171,7 +171,6 @@ class LocalTokenManager:
             timeout=600,
             auth=(self.credentials.client_id, self.credentials.client_secret),
         )
-
         response.raise_for_status()
         response_credentials = response.json()
         new_token = FitbitToken(
@@ -183,7 +182,7 @@ class LocalTokenManager:
         )
         return new_token
 
-    def load_token(self, parameters: dict) -> FitbitToken:
+    def load_token(self, parameters: dict = None) -> FitbitToken:
         """
         Loads the local token. This is mostly used for testing on local machine
         Args:
@@ -209,7 +208,7 @@ class LocalTokenManager:
         )
         return new_token
 
-    def save_token(self, token: FitbitToken, parameters: dict) -> None:
+    def save_token(self, token: FitbitToken, parameters: dict = None) -> None:
         """Saves a Fitbit API token to the local drive
         Args:
             parameters (dict): Dictionary of parameters
