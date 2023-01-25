@@ -39,23 +39,27 @@ def test_fitbittoken_return_authorization_invalid(api_token) -> None:
 ############################################
 # Perform Tests on LocalTokenManager Class #
 ############################################
-def test_return_path_parameters(local_token_manager) -> None:
-    parameters = {
-        "directory": "test_path/credentials",
-        "name": "test_save_local_credentials",
-        "make_directory": False,
-    }
-    expected_result = (
-        parameters["directory"],
-        parameters["name"],
-        parameters["make_directory"],
-    )
+# def test_return_path_parameters(local_token_manager) -> None:
+#     """
+#     Tests the hidden method that it returns the expected parameters
+#     """
+#     parameters = {
+#         "directory": "test_path/credentials",
+#         "name": "test_save_local_credentials",
+#         "make_directory": False,
+#     }
+#     expected_result = (
+#         parameters["directory"],
+#         parameters["name"],
+#         parameters["make_directory"],
+#     )
 
-    hidden_function = local_token_manager._LocalTokenManager__return_path_parameters
-
-    assert hidden_function(parameters) == expected_result
-    assert hidden_function() == ("local_data", "token", True)
-    assert hidden_function({}) == ("local_data", "token", True)
+#     hidden_function = (
+#         local_token_manager._LocalTokenManager__return_path_parameters  # pylint: disable=W0212
+#     )
+#     assert hidden_function(parameters) == expected_result
+#     assert hidden_function() == ("local_data", "token", True)
+#     assert hidden_function({}) == ("local_data", "token", True)
 
 
 def test_load_local_credentials(tmp_path, api_credentials) -> None:
@@ -74,23 +78,22 @@ def test_load_local_credentials(tmp_path, api_credentials) -> None:
     with open(full_path, "w", encoding="utf-8") as file:
         json.dump(credentials_file, file, ensure_ascii=False, indent=4)
 
-    credentials_parameters = {"directory": directory, "name": name}
-    local_token_manager = auth.LocalTokenManager(
-        credentials_parameters=credentials_parameters, load_credentials=True
+    credentials_parameters = auth.LocalTokenManagerParameters(
+        credentials_directory=directory, credentials_name=name, load_credentials=True
     )
+    local_token_manager = auth.LocalTokenManager(parameters=credentials_parameters)
 
     assert local_token_manager.credentials == api_credentials
 
 
-def test_save_local_token(tmp_path, local_token_manager, api_token) -> None:
+def test_save_local_token(local_token_manager, api_token) -> None:
     """
     Test the save_local_token function to check that it saves the file to correct spot
     """
-    name = "test_save_local_token"
-    directory = f"{tmp_path}/tokens"
-    parameters = {"name": name, "directory": directory}
+    name = local_token_manager.parameters.token_name
+    directory = local_token_manager.parameters.token_directory
 
-    local_token_manager.save_token(api_token, parameters)
+    local_token_manager.save_token(api_token)
 
     full_path = f"{directory}/{name}.json"
     assert os.path.exists(full_path)
@@ -100,26 +103,24 @@ def test_save_local_token_bad_directory(api_token, local_token_manager) -> None:
     """
     Test the save_token_local function to check that it saves the file to correct spot
     """
-    directory = "Source/FitbitExtract/tests/bad_directory"
-    parameters = {"directory": directory, "make_directory": False}
+    local_token_manager.parameters.token_directory = (
+        "Source/FitbitExtract/tests/bad_directory"
+    )
+    local_token_manager.parameters.make_directory = False
 
     with pytest.raises(
         FileNotFoundError, match="\\[Errno 2\\] No such file or directory:.*"
     ):
-        local_token_manager.save_token(api_token, parameters)
+        local_token_manager.save_token(api_token)
 
 
-def test_load_local_token(tmp_path, local_token_manager, api_token) -> None:
+def test_load_local_token(local_token_manager, api_token) -> None:
     """
     Test the load local token function to ensure it returns expected result
     """
-    name = "test_save_local_token"
-    directory = f"{tmp_path}/tokens"
-    parameters = {"name": name, "directory": directory}
+    local_token_manager.save_token(api_token)
 
-    local_token_manager.save_token(api_token, parameters)
-
-    credentials = local_token_manager.load_token(parameters)
+    credentials = local_token_manager.load_token()
 
     assert credentials == api_token
 
@@ -149,7 +150,8 @@ def test_refresh_token_bad_status(
     requests_mock, api_token, local_token_manager
 ) -> None:
     """
-    Test the get_access_token function to check that it returns a response for when http status is not OK
+    Test the get_access_token function to check that it returns
+     a response for when http status is not OK
     """
     requests_mock.post(
         TOKEN_URL,
@@ -163,9 +165,11 @@ def test_refresh_token_bad_status(
 
 def test_refresh_token_not_credentials(api_token) -> None:
     """
-    Test the get_access_token function to check that it returns a response for when http status is not OK
+    Test the get_access_token function to check that it
+    returns a response for when http status is not OK
     """
-    bad_local_token_mabager = auth.LocalTokenManager()
+    parameters = auth.LocalTokenManagerParameters(load_credentials=False)
+    bad_local_token_mabager = auth.LocalTokenManager(parameters=parameters)
 
     with pytest.raises(AttributeError, match="credentials attribute has not been set"):
         bad_local_token_mabager.refresh_token(api_token)

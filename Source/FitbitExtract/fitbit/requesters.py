@@ -18,6 +18,10 @@ class FitbitRequester(Protocol):
 
 
 class WebAPIRequester:
+    """
+    A Fitbit Requester implemented using the requests library
+    """
+
     def make_request(  # pylint: disable=W0613
         self, method: str, url: str, headers: dict, body: dict
     ) -> tuple[str, int]:

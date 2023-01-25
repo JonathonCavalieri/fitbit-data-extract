@@ -40,46 +40,6 @@ def test_register_endpoint_not_in_list(fitbitcaller) -> None:
         fitbitcaller.register_endpoint(endpoint, fake_parameters)
 
 
-def test_create_url_heart_rate_default_case(fitbitcaller, api_token) -> None:
-    """Testing create_url_heart_rate method of FitBitCaller class with default parameters"""
-    date = datetime.strptime("2014-01-04", "%Y-%m-%d").date()
-    expected_url = (
-        f"{WEB_API_URL}/user/{api_token.user_id}/activities/heart/date/{date}/1d.json"
-    )
-    url = fitbitcaller.create_url_heart_rate(date)
-
-    assert url == expected_url
-
-
-def test_create_url_heart_rate(fitbitcaller, api_token) -> None:
-    """Testing create_url_heart_rate method of FitBitCaller class with period specified"""
-    date = datetime.strptime("2014-01-04", "%Y-%m-%d").date()
-    period = "7d"
-    expected_url = f"{WEB_API_URL}/user/{api_token.user_id}/activities/heart/date/{date}/{period}.json"
-    url = fitbitcaller.create_url_heart_rate(date, period=period)
-
-    assert url == expected_url
-
-
-def test_create_url_heart_rate_bad_period_value(fitbitcaller) -> None:
-    """Testing create_url_heart_rate method of FitBitCaller class when period is not valid"""
-    date = datetime.strptime("2014-01-04", "%Y-%m-%d").date()
-
-    with pytest.raises(ValueError, match="Period is not one of the supported values"):
-        fitbitcaller.create_url_heart_rate(date, period="2d")
-
-
-def test_create_url_body_weight(fitbitcaller, api_token) -> None:
-    """Testing create_url_body_weight method of FitBitCaller class with default parameters"""
-    date = datetime.strptime("2014-01-04", "%Y-%m-%d").date()
-    expected_url = (
-        f"{WEB_API_URL}/user/{api_token.user_id}/body/log/weight/date/{date}.json"
-    )
-    url = fitbitcaller.create_url_body_weight(date)
-
-    assert url == expected_url
-
-
 def test_refresh_access_token(fitbitcaller, testing_token_manager) -> None:
     """Testing refresh_access_token method of FitBitCaller class"""
     fitbitcaller.refresh_access_token()
@@ -178,7 +138,61 @@ def test_make_registered_requests_for_date_too_many_retries(fitbitcaller) -> Non
         "get_heart_rate_by_date", caller.EndpointParameters("GET", "json")
     )
     fitbitcaller.requester.http_status = HTTPStatus.BAD_GATEWAY
-    fitbitcaller.requester.OK_after = 99
+    fitbitcaller.requester.ok_after = 99
     retries = 6
     with pytest.raises(Exception, match=f"Request failed after {retries} retries"):
         fitbitcaller.make_registered_requests_for_date(date, retries)
+
+
+##################################################
+# Test the FitBitCaller Class create url methods #
+##################################################
+
+
+def test_create_url_heart_rate_default_case(fitbitcaller, api_token) -> None:
+    """Testing create_url_heart_rate method of FitBitCaller class with default parameters"""
+    date = datetime.strptime("2014-01-04", "%Y-%m-%d").date()
+    expected_url = (
+        f"{WEB_API_URL}/user/{api_token.user_id}/activities/heart/date/{date}/1d.json"
+    )
+    url = fitbitcaller.create_url_heart_rate(date)
+
+    assert url == expected_url
+
+
+def test_create_url_heart_rate(fitbitcaller, api_token) -> None:
+    """Testing create_url_heart_rate method of FitBitCaller class with period specified"""
+    date = datetime.strptime("2014-01-04", "%Y-%m-%d").date()
+    period = "7d"
+    expected_url = f"{WEB_API_URL}/user/{api_token.user_id}/activities/heart/date/{date}/{period}.json"
+    url = fitbitcaller.create_url_heart_rate(date, period=period)
+
+    assert url == expected_url
+
+
+def test_create_url_heart_rate_bad_period_value(fitbitcaller) -> None:
+    """Testing create_url_heart_rate method of FitBitCaller class when period is not valid"""
+    date = datetime.strptime("2014-01-04", "%Y-%m-%d").date()
+
+    with pytest.raises(ValueError, match="Period is not one of the supported values"):
+        fitbitcaller.create_url_heart_rate(date, period="2d")
+
+
+def test_create_url_body_weight(fitbitcaller, api_token) -> None:
+    """Testing create_url_body_weight method of FitBitCaller class with default parameters"""
+    date = datetime.strptime("2014-01-04", "%Y-%m-%d").date()
+    expected_url = (
+        f"{WEB_API_URL}/user/{api_token.user_id}/body/log/weight/date/{date}.json"
+    )
+    url = fitbitcaller.create_url_body_weight(date)
+
+    assert url == expected_url
+
+
+def test_create_url_activity_summary(fitbitcaller, api_token) -> None:
+    """Testing create_url_body_weight method of FitBitCaller class with default parameters"""
+    date = datetime.strptime("2014-01-04", "%Y-%m-%d").date()
+    expected_url = f"{WEB_API_URL}/user/{api_token.user_id}/activities/date/{date}.json"
+    url = fitbitcaller.create_url_activity_summary(date)
+
+    assert url == expected_url

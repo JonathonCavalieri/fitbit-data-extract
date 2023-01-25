@@ -1,9 +1,11 @@
-from json import load as json_load, dump as json_dump
+import json
 import os
 from typing import Protocol
 from dataclasses import dataclass, asdict
-import requests
 
+import requests
+from cryptography.fernet import Fernet
+from google.cloud import secretmanager, storage
 
 from fitbit.constants import TOKEN_URL
 
@@ -55,14 +57,24 @@ class TokenManager(Protocol):
     def refresh_token(self, token: FitbitToken) -> FitbitToken:
         """Refreshes a fitbit access token"""
 
-    def load_credentials(self, parameters: dict) -> None:
+    def load_credentials(self) -> None:
         """Load Credentials from storage"""
 
-    def load_token(self, parameters: dict) -> FitbitToken:
+    def load_token(self) -> FitbitToken:
         """Load API Token from storage"""
 
-    def save_token(self, token: FitbitToken, parameters: dict = None) -> None:
+    def save_token(self, token: FitbitToken) -> None:
         """Save API Token to storage"""
+
+
+@dataclass
+class LocalTokenManagerParameters:
+    credentials_directory: str = "local_data"
+    credentials_name: str = "credentials"
+    token_directory: str = "local_data"
+    token_name: str = "token"
+    make_directory: bool = True
+    load_credentials: bool = True
 
 
 class LocalTokenManager:
@@ -70,76 +82,35 @@ class LocalTokenManager:
 
     def __init__(
         self,
-        credentials_parameters: dict = None,
-        token_parameters: dict = None,
+        parameters: LocalTokenManagerParameters = None,
         credentials: FitbitAppCredentials = None,
-        load_credentials: bool = False,
     ) -> None:
         """Intialise the local token manager
 
         Args:
-            credentials_parameters (dict, optional): parameter option to be passed onto the credentials methods. Defaults to None.
-            token_parameters (dict, optional): parameter option to be passed onto the token methods. Defaults to None.
-            credentials (FitbitAppCredentials, optional): Credentials object to be used by the token manager. Defaults to None.
-            load_credentials (bool, optional): Should the token manager try to load a credentials object from local storage. Defaults to False.
+            parameters (LocalTokenManagerParameters, optional): Parameters for the local token manager. Defaults to LocalTokenManagerParameters.
+            credentials (FitbitAppCredentials, optional): App credentials. Defaults to None.
         """
         # Instantiate class variables
-        self.credentials_parameters = credentials_parameters
-        self.token_parameters = token_parameters
+        if parameters is None:
+            self.parameters = LocalTokenManagerParameters()
+        else:
+            self.parameters = parameters
         self.credentials = credentials
 
         # Perform class setup
-        if load_credentials:
-            self.load_credentials(parameters=credentials_parameters)
+        if self.parameters.load_credentials:
+            self.load_credentials()
 
-    def __return_path_parameters(
-        self, parameters: dict = None
-    ) -> tuple[str, str, bool]:
-        """extracts the directory and name parameter from the parameters dictionary
-
-        Args:
-            parameters (dict): Dictionary of parameters
-
-        Returns:
-            tuple[str,str,bool]: directory, name
-                directory: directory parameter. Defaults to 'local_data' if not in dictionary
-                name: name of file parameter . Defaults to 'name' if not in dictionary
-                make_directory: should it make make directory for saving. Defaults to 'True' if not in dictionary
+    def load_credentials(self) -> None:
         """
-        if parameters is None:
-            parameters = {}
-
-        if "directory" not in parameters:
-            directory = "local_data"
-        else:
-            directory = parameters["directory"]
-
-        if "name" not in parameters:
-            name = "token"
-        else:
-            name = parameters["name"]
-
-        if "make_directory" not in parameters:
-            make_directory = True
-        else:
-            make_directory = parameters["make_directory"]
-
-        return directory, name, make_directory
-
-    def load_credentials(self, parameters: dict = None) -> None:
-        """Load app credentials from local storage into the local token manger object
-
-        Args:
-            parameters (dict): Dictionary of parameters
-
-        Relavant parameters:
-            directory str: directory to load credentials from. Defaults to 'local_data'
-            name str: name of file. Defaults to 'token'
+        Load app credentials from local storage into the local token manger object
         """
-        directory, name, _ = self.__return_path_parameters(parameters)
+        directory = self.parameters.credentials_directory
+        name = self.parameters.credentials_name
         file_name = f"{directory}/{name}.json"
         with open(file_name, "r", encoding="utf-8") as file:
-            credentials_file = json_load(file)
+            credentials_file = json.load(file)
 
         credentials = FitbitAppCredentials(
             credentials_file["client_id"], credentials_file["client_secret"]
@@ -182,23 +153,18 @@ class LocalTokenManager:
         )
         return new_token
 
-    def load_token(self, parameters: dict = None) -> FitbitToken:
+    def load_token(self) -> FitbitToken:
         """
         Loads the local token. This is mostly used for testing on local machine
-        Args:
-            parameters (dict): Dictionary of parameters
-
-        Relavant parameters:
-            directory str: directory to load credentials from. Defaults to 'local_data'
-            name str: name of file. Defaults to 'token'
 
         Returns:
             FitbitToken: FitbitToken object containing access and refresh token details
         """
-        directory, name, _ = self.__return_path_parameters(parameters)
+        directory = self.parameters.token_directory
+        name = self.parameters.token_name
         file_name = f"{directory}/{name}.json"
         with open(file_name, "r", encoding="utf-8") as file:
-            token_file = json_load(file)
+            token_file = json.load(file)
 
         new_token = FitbitToken(
             token_file["refresh_token"],
@@ -208,18 +174,13 @@ class LocalTokenManager:
         )
         return new_token
 
-    def save_token(self, token: FitbitToken, parameters: dict = None) -> None:
-        """Saves a Fitbit API token to the local drive
-        Args:
-            parameters (dict): Dictionary of parameters
-
-        Relavant parameters:
-            directory str: directory to load credentials from. Defaults to 'local_data'
-            name str: name of file. Defaults to 'token'
-            make_directory bool:
+    def save_token(self, token: FitbitToken) -> None:
         """
-        directory, name, make_directory = self.__return_path_parameters(parameters)
-        if not os.path.exists(directory) and make_directory:
+        Saves a Fitbit API token to the local drive
+        """
+        directory = self.parameters.token_directory
+        name = self.parameters.token_name
+        if not os.path.exists(directory) and self.parameters.make_directory:
             os.makedirs(directory)
 
         full_path = f"{directory}/{name}.json"
@@ -227,4 +188,142 @@ class LocalTokenManager:
         out_data = asdict(token)
 
         with open(full_path, "w", encoding="utf-8") as file:
-            json_dump(out_data, file, ensure_ascii=False, indent=4)
+            json.dump(out_data, file, ensure_ascii=False, indent=4)
+
+
+@dataclass
+class CloudTokenManagerParameters:
+    encryption_key_name: str = "fitbitapp_encryption_key"
+    client_id_name: str = "fitbitapp_client_id"
+    client_secret_name: str = "fitbitapp_client_secret"
+    token_folder: str = "user_tokens"
+
+
+class CloudTokenManager:
+    """
+    Interface protocol for a Token Manager
+
+    Methods
+    refresh_token(FitbitToken) -> FitbitToken: Refreshes a fitbit access token
+    load_credentials(dict) -> None: Load Credentials from storage
+    load_token(dict) -> FitbitToken: Load API Token from storage
+    save_token(FitbitToken, dict) -> None: Load API Token from storage
+    """
+
+    def __init__(
+        self,
+        project_id: str,
+        bucket_name: str,
+        user_id: str,
+        parameters: CloudTokenManagerParameters = None,
+    ) -> None:
+
+        if parameters is None:
+            self.parameters = CloudTokenManagerParameters()
+        else:
+            self.parameters = parameters
+        self.user_id = user_id
+        self.project_id = project_id
+        self.storage_client = storage.Client(project=project_id)
+        self.bucket = self.storage_client.get_bucket(bucket_name)
+        self.secret_client = secretmanager.SecretManagerServiceClient()
+
+        self.encryption_key = self.load_encryption_key()
+        self.credentials = self.load_credentials()
+
+    def refresh_token(self, token: FitbitToken) -> FitbitToken:
+        """Refreshes the access token by calling the authorization endpoint with refresh token
+
+        Args:
+            token (FitbitToken): Token object with access and refresh token that will be refreshed in api call
+
+        Returns:
+            FitbitToken: new token
+        """
+        if self.credentials is None:
+            raise AttributeError("credentials attribute has not been set")
+
+        body = {
+            "grant_type": "refresh_token",
+            "refresh_token": token.refresh_token,
+            "client_id": self.credentials.client_id,
+        }
+        headers = {"Content-type": "application/x-www-form-urlencoded"}
+        response = requests.post(
+            TOKEN_URL,
+            headers=headers,
+            data=body,
+            timeout=600,
+            auth=(self.credentials.client_id, self.credentials.client_secret),
+        )
+        response.raise_for_status()
+        response_credentials = response.json()
+        new_token = FitbitToken(
+            response_credentials["refresh_token"],
+            response_credentials["access_token"],
+            response_credentials["scope"],
+            response_credentials["user_id"],
+            access_token_isvalid=True,
+        )
+        return new_token
+
+    def _load_secret_from_gcp(self, secret_name: str) -> str:
+        """Loads a secrey from GCP secret manager for a given secret name
+
+        Args:
+            secret_name (str): Name of the secret
+
+        Returns:
+            str: secret value
+        """
+        resource_name = (
+            f"projects/{self.project_id}/secrets/{secret_name}/versions/latest"
+        )
+        response = self.secret_client.access_secret_version(
+            request={"name": resource_name}
+        )
+        return response.payload.data  # .decode("UTF-8")
+
+    def load_encryption_key(self) -> str:
+        """Gets the encryption key stored in the GCP secret manager
+
+        Returns:
+            str: The encryption key used to decrypt other credentials
+        """
+        key = self._load_secret_from_gcp(self.parameters.encryption_key_name)
+        return Fernet(key)
+
+    def load_credentials(self) -> None:
+        """Load Credentials from google cloud platform secret manager"""
+
+        client_id = self._load_secret_from_gcp(self.parameters.client_id_name)
+        client_secret = self._load_secret_from_gcp(self.parameters.client_secret_name)
+        return FitbitAppCredentials(client_id, client_secret)
+
+    def load_token(self) -> FitbitToken:
+        """Load API Token from storage"""
+        blob_name = f"{self.parameters.token_folder}/{self.user_id}_token_encrypted"
+        blob = self.bucket.get_blob(blob_name)
+        token_file = blob.download_as_string()
+        token_file = self.encryption_key.decrypt(token_file)
+        token_file = json.loads(token_file)
+
+        new_token = FitbitToken(
+            token_file["refresh_token"],
+            token_file["access_token"],
+            token_file["scope"],
+            token_file["user_id"],
+        )
+        return new_token
+
+    def save_token(self, token: FitbitToken) -> None:
+        """Save API Token to storage"""
+
+        out_data = asdict(token)
+        out_data = json.dumps(out_data).encode("utf-8")
+        out_data = self.encryption_key.encrypt(out_data)
+
+        blob_name = f"{self.parameters.token_folder}/{self.user_id}_token_encrypted"
+
+        blob = self.bucket.blob(blob_name)
+        blob.upload_from_string(out_data)
