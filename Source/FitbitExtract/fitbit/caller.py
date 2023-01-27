@@ -10,8 +10,9 @@ from fitbit.requesters import FitbitRequester
 
 @dataclass
 class EndpointParameters:
-    method: str
-    response_format: str
+    name: str
+    method: str = "GET"
+    response_format: str = "json"
     url_kwargs: dict = field(default_factory=dict)
     body: dict = field(default_factory=dict)
     headers: dict = field(default_factory=dict)
@@ -31,7 +32,7 @@ class FitBitCaller:
         self.response_saver = response_saver
         self.requester = requester
         self.token_manager = token_manager
-        self.registered_endpoints = {}
+        self.registered_endpoints = []
         self.available_endpoints = {
             "get_heart_rate_by_date": self.create_url_heart_rate,
             "get_body_weight_by_date": self.create_url_body_weight,
@@ -45,7 +46,7 @@ class FitBitCaller:
         self.user_token = self.token_manager.refresh_token(self.user_token)
         self.token_manager.save_token(self.user_token)
 
-    def register_multiple_endpoints(self, endpoints: dict) -> None:
+    def register_multiple_endpoints(self, endpoints: list[EndpointParameters]) -> None:
         """
         Registers multiple endpoints from dictionary object
 
@@ -53,10 +54,10 @@ class FitBitCaller:
             endpoints (dict): Of endpoints should be format {endpoint_name : endpoint_parameters}
         """
 
-        for endpoint, parameter in endpoints.items():
-            self.register_endpoint(endpoint, parameter)
+        for endpoint in endpoints:
+            self.register_endpoint(endpoint)
 
-    def register_endpoint(self, endpoint: str, parameters: EndpointParameters) -> None:
+    def register_endpoint(self, endpoint: EndpointParameters) -> None:
         """Register an endpoint to be called along with the parameters needed for calling if any
 
         Args:
@@ -66,10 +67,10 @@ class FitBitCaller:
         Raises:
             ValueError: If the selected endpoint is not in the available list
         """
-        if endpoint not in self.available_endpoints:
-            raise ValueError(f"{endpoint} not in avaliable list")
+        if endpoint.name not in self.available_endpoints:
+            raise ValueError(f"{endpoint.name} not in avaliable list")
 
-        self.registered_endpoints[endpoint] = parameters
+        self.registered_endpoints.append(endpoint)
 
     def make_registered_requests_for_date(self, date: datetime.date, retries: int = 5):
         """Makes all the requests for the APIs that have been registered.
@@ -93,24 +94,24 @@ class FitBitCaller:
 
         if not self.user_token.access_token_isvalid:
             self.refresh_access_token()
-        for endpoint, parameters in self.registered_endpoints.items():
+        for endpoint in self.registered_endpoints:
             # setup url
-            url_func = self.available_endpoints[endpoint]
-            url_kwargs = parameters.url_kwargs
-            url = url_func(date, **url_kwargs)
+            url_func = self.available_endpoints[endpoint.name]
+            url_kwargs = endpoint.url_kwargs
+            url, instance_name = url_func(date, **url_kwargs)
             # setup headers
             headers = {"authorization": self.user_token.return_authorization()}
-            headers = {**headers, **parameters.headers}
+            headers = {**headers, **endpoint.headers}
             # setup body
-            body = {**parameters.body}
+            body = {**endpoint.body}
             # Setup save parameters
-            folder = f"{endpoint}/{data_str}"
-            file_name = f"{endpoint}_{self.user_token.user_id}"
+            folder = f"{endpoint.name}/{data_str}"
+            file_name = f"{instance_name}_{self.user_token.user_id}"
 
             for attempt_number in range(1, retries + 2):
 
                 data, httpcode = self.requester.make_request(
-                    parameters.method, url, headers, body
+                    endpoint.method, url, headers, body
                 )
 
                 if httpcode == HTTPStatus.UNAUTHORIZED:
@@ -118,14 +119,16 @@ class FitBitCaller:
 
                 if httpcode == HTTPStatus.OK:
                     self.response_saver.save(
-                        data, folder, file_name, parameters.response_format
+                        data, folder, file_name, endpoint.response_format
                     )
                     break
                 if attempt_number == retries + 1:
                     raise Exception(f"Request failed after {retries} retries")
 
     # Methods to generate the fitbit URLs for each endpoint
-    def create_url_heart_rate(self, date: datetime.date, period: str = "1d") -> str:
+    def create_url_heart_rate(
+        self, date: datetime.date, period: str = "1d"
+    ) -> tuple[str, str]:
         """Generates the URL for calling the heart rate endpoint
 
         Args:
@@ -137,13 +140,17 @@ class FitBitCaller:
 
         Returns:
             str: Get request URL to call to retrieve the data
+            str: Instance file name for saving
         """
         if period not in ["1d", "7d", "30d", "1w", "1m"]:
             raise ValueError("Period is not one of the supported values")
 
-        return f"{WEB_API_URL}/user/{self.user_token.user_id}/activities/heart/date/{date}/{period}.json"
+        return (
+            f"{WEB_API_URL}/user/{self.user_token.user_id}/activities/heart/date/{date}/{period}.json",
+            "heart_rate",
+        )
 
-    def create_url_body_weight(self, date: datetime.date) -> str:
+    def create_url_body_weight(self, date: datetime.date) -> tuple[str, str]:
         """Generates the URL for calling the body weight endpoint
 
         Args:
@@ -152,9 +159,13 @@ class FitBitCaller:
 
         Returns:
             str: Get request URL to call to retrieve the data
+            str: Instance file name for saving
         """
 
-        return f"{WEB_API_URL}/user/{self.user_token.user_id}/body/log/weight/date/{date}.json"
+        return (
+            f"{WEB_API_URL}/user/{self.user_token.user_id}/body/log/weight/date/{date}.json",
+            "body_weight",
+        )
 
     def create_url_activity_summary(self, date: datetime.date) -> str:
         """Generates the URL for calling the activity summary endpoint
@@ -165,7 +176,9 @@ class FitBitCaller:
 
         Returns:
             str: Get request URL to call to retrieve the data
+            str: Instance file name for saving
         """
         return (
-            f"{WEB_API_URL}/user/{self.user_token.user_id}/activities/date/{date}.json"
+            f"{WEB_API_URL}/user/{self.user_token.user_id}/activities/date/{date}.json",
+            "activity_summary",
         )

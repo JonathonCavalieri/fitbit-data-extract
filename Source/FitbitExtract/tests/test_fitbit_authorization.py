@@ -39,27 +39,9 @@ def test_fitbittoken_return_authorization_invalid(api_token) -> None:
 ############################################
 # Perform Tests on LocalTokenManager Class #
 ############################################
-# def test_return_path_parameters(local_token_manager) -> None:
-#     """
-#     Tests the hidden method that it returns the expected parameters
-#     """
-#     parameters = {
-#         "directory": "test_path/credentials",
-#         "name": "test_save_local_credentials",
-#         "make_directory": False,
-#     }
-#     expected_result = (
-#         parameters["directory"],
-#         parameters["name"],
-#         parameters["make_directory"],
-#     )
-
-#     hidden_function = (
-#         local_token_manager._LocalTokenManager__return_path_parameters  # pylint: disable=W0212
-#     )
-#     assert hidden_function(parameters) == expected_result
-#     assert hidden_function() == ("local_data", "token", True)
-#     assert hidden_function({}) == ("local_data", "token", True)
+def test_local_token_manager_default_init():
+    local_token_manager = auth.LocalTokenManager()
+    assert local_token_manager.parameters == auth.LocalTokenManagerParameters()
 
 
 def test_load_local_credentials(tmp_path, api_credentials) -> None:
@@ -173,3 +155,12 @@ def test_refresh_token_not_credentials(api_token) -> None:
 
     with pytest.raises(AttributeError, match="credentials attribute has not been set"):
         bad_local_token_mabager.refresh_token(api_token)
+
+
+############################################
+# Perform Tests on CloudTokenManager Class #
+############################################
+
+# def test_local_token_manager_default_init():
+#     local_token_manager = auth.LocalTokenManager()
+#     assert local_token_manager.parameters == auth.LocalTokenManagerParameters()

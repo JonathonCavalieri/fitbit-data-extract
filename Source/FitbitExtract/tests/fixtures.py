@@ -9,6 +9,7 @@ from google.cloud import storage
 import fitbit.authorization as auth
 import fitbit.caller as caller
 import fitbit.savers as savers
+import fitbit.requesters as requesters
 
 ###############################
 # Get GCP objects for testing #
@@ -192,3 +193,8 @@ def fitbitcaller(
     return caller.FitBitCaller(
         api_token, local_response_saver, requester, testing_token_manager
     )
+
+
+@pytest.fixture()
+def requester() -> requesters.WebAPIRequester:
+    return requesters.WebAPIRequester()

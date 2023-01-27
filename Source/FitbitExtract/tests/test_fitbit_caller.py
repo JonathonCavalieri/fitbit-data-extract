@@ -21,23 +21,21 @@ from tests.fixtures import (  # pylint: disable=W0611
 ###############################
 def test_register_endpoint(fitbitcaller) -> None:
     """Testing Register Endpoint method of FitBitCaller class"""
-    fake_parameters = caller.EndpointParameters("GET", "json")
-    endpoint = "get_heart_rate_by_date"
-    expected_result = {endpoint: fake_parameters}
-    fitbitcaller.register_endpoint(endpoint, fake_parameters)
+    fake_endpoint = caller.EndpointParameters("get_heart_rate_by_date", "GET", "json")
+    expected_result = [fake_endpoint]
+    fitbitcaller.register_endpoint(fake_endpoint)
 
     assert expected_result == fitbitcaller.registered_endpoints
 
 
 def test_register_endpoint_not_in_list(fitbitcaller) -> None:
     """Testing Register Endpoint method of FitBitCaller class when endpoint is not in available list"""
-    fake_parameters = caller.EndpointParameters(
-        "GET", "json", url_kwargs={"parameter1": "value1"}
+    fake_endpoint = caller.EndpointParameters(
+        "fake_endpoint", "GET", "json", url_kwargs={"parameter1": "value1"}
     )
-    endpoint = "fake_endpoint"
 
     with pytest.raises(ValueError, match=".* not in avaliable list"):
-        fitbitcaller.register_endpoint(endpoint, fake_parameters)
+        fitbitcaller.register_endpoint(fake_endpoint)
 
 
 def test_refresh_access_token(fitbitcaller, testing_token_manager) -> None:
@@ -48,10 +46,10 @@ def test_refresh_access_token(fitbitcaller, testing_token_manager) -> None:
 
 def test_register_multiple_endpoints(fitbitcaller) -> None:
     """Testing register_multiple_endpoints method of FitBitCaller class"""
-    fake_endpoints = {
-        "get_heart_rate_by_date": caller.EndpointParameters("GET", "json"),
-        "get_body_weight_by_date": caller.EndpointParameters("GET", "json"),
-    }
+    fake_endpoints = [
+        caller.EndpointParameters("get_heart_rate_by_date", "GET", "json"),
+        caller.EndpointParameters("get_body_weight_by_date", "GET", "json"),
+    ]
 
     fitbitcaller.register_multiple_endpoints(fake_endpoints)
 
@@ -60,15 +58,15 @@ def test_register_multiple_endpoints(fitbitcaller) -> None:
 
 def test_make_registered_requests_for_date_single(tmp_path, fitbitcaller) -> None:
     """Testing make_registered_requests method of FitBitCaller class"""
-    fake_parameters = caller.EndpointParameters("GET", "json")
-    endpoint = "get_heart_rate_by_date"
+    endpoint = caller.EndpointParameters("get_heart_rate_by_date", "GET", "json")
+
     date = datetime.strptime("2023-01-17", "%Y-%m-%d").date()
     data_str = date.strftime("%Y%m%d")
-    folder = f"{tmp_path}/{endpoint}/{data_str}"
-    file_name = f"{endpoint}_{fitbitcaller.user_token.user_id}"
+    folder = f"{tmp_path}/{endpoint.name}/{data_str}"
+    file_name = f"heart_rate_{fitbitcaller.user_token.user_id}"
     expected_file_path = f"{folder}/{file_name}.json"
 
-    fitbitcaller.register_endpoint(endpoint, fake_parameters)
+    fitbitcaller.register_endpoint(endpoint)
     fitbitcaller.make_registered_requests_for_date(date)
 
     assert os.path.exists(expected_file_path)
@@ -76,35 +74,41 @@ def test_make_registered_requests_for_date_single(tmp_path, fitbitcaller) -> Non
 
 def test_make_registered_requests_for_date_multiple(tmp_path, fitbitcaller) -> None:
     """Testing make_registered_requests method of FitBitCaller class"""
-    fake_parameters = {
-        "get_heart_rate_by_date": caller.EndpointParameters("GET", "json"),
-        "get_body_weight_by_date": caller.EndpointParameters("GET", "json"),
-    }
+    endpoints = [
+        caller.EndpointParameters("get_heart_rate_by_date", "GET", "json"),
+        caller.EndpointParameters("get_body_weight_by_date", "GET", "json"),
+    ]
+
     date = datetime.strptime("2023-01-17", "%Y-%m-%d").date()
     data_str = date.strftime("%Y%m%d")
-    fitbitcaller.register_multiple_endpoints(fake_parameters)
+    fitbitcaller.register_multiple_endpoints(endpoints)
     fitbitcaller.make_registered_requests_for_date(date)
 
-    for endpoint, parameters in fake_parameters.items():
-        folder = f"{tmp_path}/{endpoint}/{data_str}"
-        file_name = f"{endpoint}_{fitbitcaller.user_token.user_id}"
-        expected_file_path = f"{folder}/{file_name}.{parameters.response_format}"
+    for endpoint in endpoints:
+
+        url_func = fitbitcaller.available_endpoints[endpoint.name]
+
+        _, instance_name = url_func(date, **endpoint.url_kwargs)
+
+        folder = f"{tmp_path}/{endpoint.name}/{data_str}"
+        file_name = f"{instance_name}_{fitbitcaller.user_token.user_id}"
+        expected_file_path = f"{folder}/{file_name}.{endpoint.response_format}"
 
         assert os.path.exists(expected_file_path)
 
 
 def test_make_registered_requests_for_date_unauthorized(tmp_path, fitbitcaller) -> None:
     """Testing make_registered_requests method of FitBitCaller class when Unauthorized"""
-    fake_parameters = caller.EndpointParameters("GET", "json")
-    endpoint = "get_heart_rate_by_date"
+    endpoint = caller.EndpointParameters("get_heart_rate_by_date", "GET", "json")
+
     date = datetime.strptime("2023-01-17", "%Y-%m-%d").date()
     data_str = date.strftime("%Y%m%d")
-    folder = f"{tmp_path}/{endpoint}/{data_str}"
-    file_name = f"{endpoint}_{fitbitcaller.user_token.user_id}"
+    folder = f"{tmp_path}/{endpoint.name}/{data_str}"
+    file_name = f"heart_rate_{fitbitcaller.user_token.user_id}"
     expected_file_path = f"{folder}/{file_name}.json"
     fitbitcaller.requester.http_status = HTTPStatus.UNAUTHORIZED
 
-    fitbitcaller.register_endpoint(endpoint, fake_parameters)
+    fitbitcaller.register_endpoint(endpoint)
     fitbitcaller.make_registered_requests_for_date(date)
 
     assert os.path.exists(expected_file_path)
@@ -123,7 +127,7 @@ def test_make_registered_requests_for_date_bad_retries(fitbitcaller) -> None:
 
     date = datetime.strptime("2023-01-17", "%Y-%m-%d").date()
     fitbitcaller.register_endpoint(
-        "get_heart_rate_by_date", caller.EndpointParameters("GET", "json")
+        caller.EndpointParameters("get_heart_rate_by_date", "GET", "json")
     )
 
     with pytest.raises(ValueError, match="Retries cannot be less than 0"):
@@ -135,7 +139,7 @@ def test_make_registered_requests_for_date_too_many_retries(fitbitcaller) -> Non
 
     date = datetime.strptime("2023-01-17", "%Y-%m-%d").date()
     fitbitcaller.register_endpoint(
-        "get_heart_rate_by_date", caller.EndpointParameters("GET", "json")
+        caller.EndpointParameters("get_heart_rate_by_date", "GET", "json")
     )
     fitbitcaller.requester.http_status = HTTPStatus.BAD_GATEWAY
     fitbitcaller.requester.ok_after = 99
@@ -155,9 +159,10 @@ def test_create_url_heart_rate_default_case(fitbitcaller, api_token) -> None:
     expected_url = (
         f"{WEB_API_URL}/user/{api_token.user_id}/activities/heart/date/{date}/1d.json"
     )
-    url = fitbitcaller.create_url_heart_rate(date)
+    url, save_name = fitbitcaller.create_url_heart_rate(date)
 
     assert url == expected_url
+    assert save_name == "heart_rate"
 
 
 def test_create_url_heart_rate(fitbitcaller, api_token) -> None:
@@ -165,9 +170,10 @@ def test_create_url_heart_rate(fitbitcaller, api_token) -> None:
     date = datetime.strptime("2014-01-04", "%Y-%m-%d").date()
     period = "7d"
     expected_url = f"{WEB_API_URL}/user/{api_token.user_id}/activities/heart/date/{date}/{period}.json"
-    url = fitbitcaller.create_url_heart_rate(date, period=period)
+    url, save_name = fitbitcaller.create_url_heart_rate(date, period=period)
 
     assert url == expected_url
+    assert save_name == "heart_rate"
 
 
 def test_create_url_heart_rate_bad_period_value(fitbitcaller) -> None:
@@ -184,15 +190,17 @@ def test_create_url_body_weight(fitbitcaller, api_token) -> None:
     expected_url = (
         f"{WEB_API_URL}/user/{api_token.user_id}/body/log/weight/date/{date}.json"
     )
-    url = fitbitcaller.create_url_body_weight(date)
+    url, save_name = fitbitcaller.create_url_body_weight(date)
 
     assert url == expected_url
+    assert save_name == "body_weight"
 
 
 def test_create_url_activity_summary(fitbitcaller, api_token) -> None:
     """Testing create_url_body_weight method of FitBitCaller class with default parameters"""
     date = datetime.strptime("2014-01-04", "%Y-%m-%d").date()
     expected_url = f"{WEB_API_URL}/user/{api_token.user_id}/activities/date/{date}.json"
-    url = fitbitcaller.create_url_activity_summary(date)
+    url, save_name = fitbitcaller.create_url_activity_summary(date)
 
     assert url == expected_url
+    assert save_name == "activity_summary"

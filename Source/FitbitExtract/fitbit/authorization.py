@@ -74,7 +74,7 @@ class LocalTokenManagerParameters:
     token_directory: str = "local_data"
     token_name: str = "token"
     make_directory: bool = True
-    load_credentials: bool = True
+    load_credentials: bool = False
 
 
 class LocalTokenManager:

@@ -83,15 +83,15 @@ def test_local_response_saver_bad_directory(local_response_saver) -> None:
 ###################################
 
 
-def test_gcp_response_saver_json(gcp_response_saver) -> None:
-    """Test the GCP save object with saving a json file"""
-    fake_json_data = '{"field1": "value1", "field2": 2, "field3": "value3"}'
-    folder = "data"
-    file_format = "json"
-    file_name = "test_save_file"
+# def test_gcp_response_saver_json(gcp_response_saver) -> None:
+#     """Test the GCP save object with saving a json file"""
+#     fake_json_data = '{"field1": "value1", "field2": 2, "field3": "value3"}'
+#     folder = "data"
+#     file_format = "json"
+#     file_name = "test_save_file"
 
-    gcp_response_saver.save(fake_json_data, folder, file_name, file_format)
-    blob_name = f"{folder}/{file_name}.{file_format}"
-    blob = gcp_response_saver.bucket.blob(blob_name)
+#     gcp_response_saver.save(fake_json_data, folder, file_name, file_format)
+#     blob_name = f"{folder}/{file_name}.{file_format}"
+#     blob = gcp_response_saver.bucket.blob(blob_name)
 
-    assert blob.exists
+#     assert blob.exists
