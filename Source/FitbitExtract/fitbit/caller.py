@@ -37,6 +37,11 @@ class FitBitCaller:
             "get_heart_rate_by_date": self.create_url_heart_rate,
             "get_body_weight_by_date": self.create_url_body_weight,
             "get_activity_summary_by_date": self.create_url_activity_summary,
+            "get_activity_tcx_by_id": self.create_url_activity_tcx,
+            "get_activity_details_by_id": self.create_url_activity_details,
+            "get_heart_rate_variablity_by_date": self.create_url_heart_rate_variablity,
+            "get_cardio_score_by_date": self.create_url_cardio_score,
+            "get_sleep_by_date": self.create_url_sleep,
         }
 
     def refresh_access_token(self) -> None:
@@ -117,6 +122,9 @@ class FitBitCaller:
                 if httpcode == HTTPStatus.UNAUTHORIZED:
                     self.refresh_access_token()
 
+                if httpcode == HTTPStatus.FORBIDDEN:
+                    raise Exception("Request is forbidden please check user scope")
+
                 if httpcode == HTTPStatus.OK:
                     self.response_saver.save(
                         data, folder, file_name, endpoint.response_format
@@ -146,8 +154,8 @@ class FitBitCaller:
             raise ValueError("Period is not one of the supported values")
 
         return (
-            f"{WEB_API_URL}/user/{self.user_token.user_id}/activities/heart/date/{date}/{period}.json",
-            "heart_rate",
+            f"{WEB_API_URL}/1/user/{self.user_token.user_id}/activities/heart/date/{date}/{period}.json",
+            "get_heart_rate_by_date",
         )
 
     def create_url_body_weight(self, date: datetime.date) -> tuple[str, str]:
@@ -163,11 +171,11 @@ class FitBitCaller:
         """
 
         return (
-            f"{WEB_API_URL}/user/{self.user_token.user_id}/body/log/weight/date/{date}.json",
-            "body_weight",
+            f"{WEB_API_URL}/1/user/{self.user_token.user_id}/body/log/weight/date/{date}.json",
+            "get_body_weight_by_date",
         )
 
-    def create_url_activity_summary(self, date: datetime.date) -> str:
+    def create_url_activity_summary(self, date: datetime.date) -> tuple[str, str]:
         """Generates the URL for calling the activity summary endpoint
 
         Args:
@@ -179,6 +187,56 @@ class FitBitCaller:
             str: Instance file name for saving
         """
         return (
-            f"{WEB_API_URL}/user/{self.user_token.user_id}/activities/date/{date}.json",
-            "activity_summary",
+            f"{WEB_API_URL}/1/user/{self.user_token.user_id}/activities/date/{date}.json",
+            "get_activity_summary_by_date",
+        )
+
+    def create_url_activity_tcx(
+        self, date: datetime.date, log_id: str = None, partialtcx: bool = True
+    ) -> tuple[str, str]:
+
+        if log_id is None:
+            raise ValueError("log_id was not provided as a parameter")
+
+        if partialtcx:
+            partialtcx_str = "true"
+        else:
+            partialtcx_str = "false"
+
+        return (
+            f"{WEB_API_URL}/1/user/{self.user_token.user_id}/activities/{log_id}.tcx?includePartialTCX={partialtcx_str}",
+            f"{log_id}_get_activity_tcx_by_id",
+        )
+
+    def create_url_activity_details(
+        self, date: datetime.date, log_id: str = None
+    ) -> tuple[str, str]:
+
+        if log_id is None:
+            raise ValueError("log_id was not provided as a parameter")
+
+        return (
+            f"{WEB_API_URL}/1/user/{self.user_token.user_id}/activities/{log_id}.json",
+            f"{log_id}_get_activity_details_by_id",
+        )
+
+    def create_url_heart_rate_variablity(self, date: datetime.date) -> tuple[str, str]:
+
+        return (
+            f"{WEB_API_URL}/1/user/{self.user_token.user_id}/hrv/date/{date}/all.json",
+            "get_heart_rate_variablity_by_date",
+        )
+
+    def create_url_cardio_score(self, date: datetime.date) -> tuple[str, str]:
+
+        return (
+            f"{WEB_API_URL}/1/user/{self.user_token.user_id}/cardioscore/date/{date}.json",
+            "get_cardio_score_by_date",
+        )
+
+    def create_url_sleep(self, date: datetime.date) -> tuple[str, str]:
+
+        return (
+            f"{WEB_API_URL}/1.2/user/{self.user_token.user_id}/sleep/date/{date}.json",
+            "get_sleep_by_date",
         )

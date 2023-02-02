@@ -7,7 +7,10 @@ import shutil
 
 
 def package_cloud_function(
-    function_name, base_source_dir="Source", destination_dir="packaged_zips"
+    function_name,
+    source_dir="Source/FitbitExtract",
+    destination_dir="packaged_zips",
+    config_file="config.json",
 ) -> None:
     def check_prefix(file_name: str) -> bool:
         exclude_prefixes = ["__", "test", "local"]
@@ -16,14 +19,22 @@ def package_cloud_function(
 
         return not any(check)
 
-    source_dir = os.path.join(base_source_dir, function_name)
+    # Clear and recreate temp directory
     temp_dir = os.path.join(destination_dir, "temp")
+    if os.path.exists(temp_dir):
+        shutil.rmtree(temp_dir)
+    os.mkdir(temp_dir)
+
+    # Copy Config to temp directory
+    if os.path.exists(config_file):
+        config_destination = os.path.join(temp_dir, config_file)
+        shutil.copyfile(config_file, config_destination)
+
+    # Get all files. remove temp, local and testings files
     files = os.listdir(source_dir)
     files = [file for file in files if check_prefix(file)]
 
-    if os.path.exists(temp_dir):
-        shutil.rmtree(temp_dir)
-
+    # Copy files and folders to temp location
     for file in files:
         source = os.path.join(source_dir, file)
         destination = os.path.join(temp_dir, file)
@@ -32,6 +43,7 @@ def package_cloud_function(
         else:
             shutil.copyfile(source, destination)
 
+    # Make an archive of the file
     archive_name = os.path.join(destination_dir, function_name)
     if os.path.exists(archive_name):
         os.remove(archive_name)
@@ -40,7 +52,7 @@ def package_cloud_function(
 
 
 def main() -> None:
-    package_cloud_function("FitbitExtract")
+    package_cloud_function("Fitbit")
     # package_cloud_function("FitbitLoad")
 
 

@@ -1,11 +1,18 @@
+import sys
+
+sys.path.append("Source/FitbitExtract")
+from helper.functions import get_config_parameter
 from google.cloud import storage, pubsub
 
+CONFIG_DIRECTORY = "config.json"
+PROJECT_ID = get_config_parameter(CONFIG_DIRECTORY, "gcp_project")
+LOCATION = get_config_parameter(CONFIG_DIRECTORY, "gcp_location")
 
-PROJECT_ID = "fitbit-data-extract"
-
-LOCATION = "us-central1"
-
-buckets = ["fitbit-data-extract-prod", "fitbit-data-extract-deploy-staging"]
+buckets = [
+    "fitbit-data-extract-credentials",
+    "fitbit-data-extract-data-files",
+    "fitbit-data-extract-deploy-staging",
+]
 storage_client = storage.Client(project=PROJECT_ID)
 for bucket_name in buckets:
     bucket = storage_client.bucket(bucket_name)

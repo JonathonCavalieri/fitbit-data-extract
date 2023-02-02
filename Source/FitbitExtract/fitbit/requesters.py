@@ -1,5 +1,6 @@
 from typing import Protocol
 import requests
+from http import HTTPStatus
 
 
 class FitbitRequester(Protocol):
@@ -33,4 +34,6 @@ class WebAPIRequester:
 
     def _make_get_request(self, url: str, headers: dict) -> tuple[str, int]:
         response = requests.get(url, headers=headers, timeout=600)
+        if response.status_code != HTTPStatus.OK:
+            print(url, response.status_code, response.text)
         return response.text, response.status_code

@@ -157,7 +157,7 @@ def test_create_url_heart_rate_default_case(fitbitcaller, api_token) -> None:
     """Testing create_url_heart_rate method of FitBitCaller class with default parameters"""
     date = datetime.strptime("2014-01-04", "%Y-%m-%d").date()
     expected_url = (
-        f"{WEB_API_URL}/user/{api_token.user_id}/activities/heart/date/{date}/1d.json"
+        f"{WEB_API_URL}/1/user/{api_token.user_id}/activities/heart/date/{date}/1d.json"
     )
     url, save_name = fitbitcaller.create_url_heart_rate(date)
 
@@ -169,7 +169,7 @@ def test_create_url_heart_rate(fitbitcaller, api_token) -> None:
     """Testing create_url_heart_rate method of FitBitCaller class with period specified"""
     date = datetime.strptime("2014-01-04", "%Y-%m-%d").date()
     period = "7d"
-    expected_url = f"{WEB_API_URL}/user/{api_token.user_id}/activities/heart/date/{date}/{period}.json"
+    expected_url = f"{WEB_API_URL}/1/user/{api_token.user_id}/activities/heart/date/{date}/{period}.json"
     url, save_name = fitbitcaller.create_url_heart_rate(date, period=period)
 
     assert url == expected_url
@@ -188,7 +188,7 @@ def test_create_url_body_weight(fitbitcaller, api_token) -> None:
     """Testing create_url_body_weight method of FitBitCaller class with default parameters"""
     date = datetime.strptime("2014-01-04", "%Y-%m-%d").date()
     expected_url = (
-        f"{WEB_API_URL}/user/{api_token.user_id}/body/log/weight/date/{date}.json"
+        f"{WEB_API_URL}/1/user/{api_token.user_id}/body/log/weight/date/{date}.json"
     )
     url, save_name = fitbitcaller.create_url_body_weight(date)
 
@@ -199,7 +199,9 @@ def test_create_url_body_weight(fitbitcaller, api_token) -> None:
 def test_create_url_activity_summary(fitbitcaller, api_token) -> None:
     """Testing create_url_body_weight method of FitBitCaller class with default parameters"""
     date = datetime.strptime("2014-01-04", "%Y-%m-%d").date()
-    expected_url = f"{WEB_API_URL}/user/{api_token.user_id}/activities/date/{date}.json"
+    expected_url = (
+        f"{WEB_API_URL}/1/user/{api_token.user_id}/activities/date/{date}.json"
+    )
     url, save_name = fitbitcaller.create_url_activity_summary(date)
 
     assert url == expected_url

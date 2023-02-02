@@ -1,12 +1,18 @@
 import webbrowser
 
-from fitbit.authorization import FitbitToken, LocalTokenManager
+from fitbit.authorization import FitbitToken, LocalTokenManager, CloudTokenManager
 from fitbit.local_authorization import (
     generate_authorization_request,
     generate_code_verifier,
     parse_return_url,
     get_access_token,
 )
+from helper.functions import get_config_parameter
+
+
+CONFIG = "config.json"
+PROJECT_ID = get_config_parameter(CONFIG, "gcp_project")
+BUCKET_NAME_CREDENTIALS = get_config_parameter(CONFIG, "gcp_bucket_credentials")
 
 
 def main() -> None:
@@ -30,7 +36,10 @@ def main() -> None:
         token["user_id"],
         access_token_isvalid=True,
     )
-    token_manager = LocalTokenManager()
+    # token_manager = LocalTokenManager()
+    token_manager = CloudTokenManager(
+        PROJECT_ID, BUCKET_NAME_CREDENTIALS, fitbit_token.user_id
+    )
     token_manager.save_token(fitbit_token)
 
 

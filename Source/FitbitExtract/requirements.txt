@@ -1,5 +1,8 @@
 requests
 google-cloud-storage
 google-cloud-secret-manager
+google-cloud-pubsub
+google-cloud-bigquery
 cryptography
 functions-framework==3.0.0
+pandas

@@ -1,0 +1,13 @@
+{
+    "user_id": "user id here",
+    "date": "current for yesterday or date in formate YYYY-mm-dd",
+    "endpoints": [
+        {
+          "name": "endpoint name" ,
+          "method": "http method for endpoint",
+          "url_kwargs": "keyword args for endpoint",
+          "headers": "headers for endpoint",
+          "body": "body for endpoint"
+        }
+    ]
+}
