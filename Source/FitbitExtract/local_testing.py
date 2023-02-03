@@ -1,14 +1,14 @@
 import helper.functions as helper
-from fitbit.transform import FitbitETL
+from fitbit.transformers import FitbitETL
 from fitbit.loaders import LocalDataLoader
 import helper.localfunctions as localhelper
 from fitbit.caller import EndpointParameters
 import re
 from fitbit import constants as fit_constants
-from fitbit.transform import flattern_dictionary
+from fitbit.transformers import flattern_dictionary
 from fitbit.loaders import GCPDataLoader, LocalDataLoader
-from fitbit.messenger import PubSubMessenger, LocalMessenger
-
+from fitbit.messengers import PubSubMessenger, LocalMessenger
+from fitbit import transformers, loaders
 
 PROJECT_ID = helper.get_config_parameter("config.json", "gcp_project")
 BUCKET_NAME = helper.get_config_parameter("config.json", "gcp_bucket_file_store")
@@ -172,4 +172,10 @@ if __name__ == "__main__":
     # fake_event = FakeEvent()
     # testing_main_transform_load(fake_event)
     # testing_pubsub_messenger()
-    testing_debug()
+    # testing_debug()
+    # testing4()
+    import os
+
+    path = "C:\\Users\\JonathonCavalieri\\AppData\\Local\\Temp\\pytest-of-JonathonCavalieri\\pytest-246\\202301181/get_cardio_score_by_date_TESTUSER.json"
+    log_value = f"files_processed \{'date': '2023-01-18', 'user_id': 'TESTUSER', 'processed_date': '2023-02-03 12:31:38', 'api_endpoint': 'get_cardio_score_by_date', 'file_processed': '{path}'\}\n"
+    print(log_value)

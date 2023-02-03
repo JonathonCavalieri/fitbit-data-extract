@@ -7,6 +7,8 @@ from fitbit.caller import EndpointParameters
 import helper.functions as helper
 import helper.constants as constants
 
+from tests.fixtures import config_file
+
 
 def test_decode_event_messages() -> None:
     """_summary_"""
@@ -106,6 +108,38 @@ def test_get_endpoints() -> None:
     parameters = {"endpoints": [endpoint_1, endpoint_2]}
 
     assert expected_result == helper.get_endpoints(parameters)
+
+
+def test_get_config_parameter(config_file) -> None:
+    """Test the get_config_parameter help function"""
+    parameter_name = "test_parameter_2"
+    expected_value = "parameter_value_2"
+    value = helper.get_config_parameter(config_file, parameter_name)
+    assert value == expected_value
+
+
+def test_get_config_parameter_bad_parameter_name(config_file) -> None:
+    """Test the get_config_parameter help function when bad parameter"""
+    parameter_name = "bad_parameter"
+    with pytest.raises(KeyError, match=f"Please add to {parameter_name}"):
+        helper.get_config_parameter(config_file, parameter_name)
+
+
+def test_get_config_parameter_bad_missing_file() -> None:
+    """Test the get_config_parameter help function when bad parameter"""
+    config_file = "baddirectory/badconfig.json"
+    parameter_name = "bad_parameter"
+    with pytest.raises(Exception, match=f"No config file found at {config_file}"):
+        helper.get_config_parameter(config_file, parameter_name)
+
+
+def test_get_config_parameter_bad_parameter_value(config_file) -> None:
+    """Test the get_config_parameter help function when bad parameter"""
+    parameter_name = "test_parameter"
+    with pytest.raises(
+        ValueError, match=f"Please fill in {parameter_name} with a value"
+    ):
+        helper.get_config_parameter(config_file, parameter_name)
 
 
 # def  test_() -> None:

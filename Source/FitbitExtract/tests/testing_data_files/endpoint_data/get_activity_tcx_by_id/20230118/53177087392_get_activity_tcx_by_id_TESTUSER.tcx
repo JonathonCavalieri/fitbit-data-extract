@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<TrainingCenterDatabase xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2">
+    <Activities>
+        <Activity Sport="Other">
+            <Id>2023-01-18T07:06:17.000+11:00</Id>
+            <Lap StartTime="2023-01-18T07:06:17.000+11:00">
+                <TotalTimeSeconds>663.0</TotalTimeSeconds>
+                <DistanceMeters>1000.0</DistanceMeters>
+                <Calories>107</Calories>
+                <Intensity>Active</Intensity>
+                <TriggerMethod>Manual</TriggerMethod>
+                <Track>
+                    <Trackpoint>
+                        <Time>2023-01-18T07:06:17.000+11:00</Time>
+                        <Position>
+                            <LatitudeDegrees>-33.89657151699066</LatitudeDegrees>
+                            <LongitudeDegrees>151.1981600522995</LongitudeDegrees>
+                        </Position>
+                        <AltitudeMeters>43.580799998146816</AltitudeMeters>
+                        <DistanceMeters>0.0</DistanceMeters>
+                        <HeartRateBpm>
+                            <Value>102</Value>
+                        </HeartRateBpm>
+                    </Trackpoint>
+                </Track>
+            </Lap>
+            <Lap StartTime="2023-01-18T07:17:45.000+11:00">
+                <TotalTimeSeconds>563.0</TotalTimeSeconds>
+                <DistanceMeters>1000.0</DistanceMeters>
+                <Calories>96</Calories>
+                <Intensity>Active</Intensity>
+                <TriggerMethod>Manual</TriggerMethod>
+                <Track>
+                    <Trackpoint>
+                        <Time>2023-01-18T07:17:45.000+11:00</Time>
+                        <Position>
+                            <LatitudeDegrees>-33.888354539871216</LatitudeDegrees>
+                            <LongitudeDegrees>151.20156371593475</LongitudeDegrees>
+                        </Position>
+                        <AltitudeMeters>52.347969368935196</AltitudeMeters>
+                        <DistanceMeters>1004.7700000000002</DistanceMeters>
+                        <HeartRateBpm>
+                            <Value>127</Value>
+                        </HeartRateBpm>
+                    </Trackpoint>
+                </Track>
+            </Lap>
+            <Lap StartTime="2023-01-18T07:27:09.000+11:00">
+                <TotalTimeSeconds>594.0</TotalTimeSeconds>
+                <DistanceMeters>1000.0</DistanceMeters>
+                <Calories>106</Calories>
+                <Intensity>Active</Intensity>
+                <TriggerMethod>Manual</TriggerMethod>
+                <Track>
+                    <Trackpoint>
+                        <Time>2023-01-18T07:27:09.000+11:00</Time>
+                        <Position>
+                            <LatitudeDegrees>-33.87998628616333</LatitudeDegrees>
+                            <LongitudeDegrees>151.20518672466278</LongitudeDegrees>
+                        </Position>
+                        <AltitudeMeters>31.50541212076629</AltitudeMeters>
+                        <DistanceMeters>2007.39</DistanceMeters>
+                        <HeartRateBpm>
+                            <Value>132</Value>
+                        </HeartRateBpm>
+                    </Trackpoint>
+                </Track>
+            </Lap>
+            <Lap StartTime="2023-01-18T07:37:03.000+11:00">
+                <TotalTimeSeconds>407.0</TotalTimeSeconds>
+                <DistanceMeters>680.0</DistanceMeters>
+                <Calories>60</Calories>
+                <Intensity>Active</Intensity>
+                <TriggerMethod>Manual</TriggerMethod>
+                <Track>
+                    <Trackpoint>
+                        <Time>2023-01-18T07:37:03.000+11:00</Time>
+                        <Position>
+                            <LatitudeDegrees>-33.87146699428558</LatitudeDegrees>
+                            <LongitudeDegrees>151.2072845697403</LongitudeDegrees>
+                        </Position>
+                        <AltitudeMeters>46.46037123643947</AltitudeMeters>
+                        <DistanceMeters>3010.79</DistanceMeters>
+                        <HeartRateBpm>
+                            <Value>134</Value>
+                        </HeartRateBpm>
+                    </Trackpoint>
+                </Track>
+            </Lap>
+            <Creator xsi:type="Device_t" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+                <UnitId>0</UnitId>
+                <ProductID>0</ProductID>
+            </Creator>
+        </Activity>
+    </Activities>
+</TrainingCenterDatabase>

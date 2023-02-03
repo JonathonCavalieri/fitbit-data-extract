@@ -3,15 +3,15 @@ from collections.abc import MutableMapping
 import os
 import re
 from fitbit.loaders import DataLoader
-from fitbit.messenger import Messenger
+from fitbit.messengers import Messenger
 from fitbit.caller import EndpointParameters
 import fitbit.constants as constants
 import xml.etree.ElementTree as ET
 
 
-def flattern_dictionary(d, parent_key="", sep=".") -> dict:
+def flattern_dictionary(dictionary, parent_key="", sep=".") -> dict:
     items = []
-    for key, value in d.items():
+    for key, value in dictionary.items():
         new_key = parent_key + sep + key if parent_key else key
         if isinstance(value, MutableMapping):
             items.extend(flattern_dictionary(value, new_key, sep=sep).items())
@@ -76,7 +76,7 @@ class FitbitETL:
     def get_details_from_path(self, path: str) -> str:
 
         file_name = os.path.basename(path)
-        endpoint_search = re.search(".*(get.+)_(.+)\..+", file_name, re.IGNORECASE)
+        endpoint_search = re.search(r".*(get.+)_(.+)\..+", file_name, re.IGNORECASE)
 
         if endpoint_search:
             self.endpoint = endpoint_search.group(1)
@@ -87,7 +87,9 @@ class FitbitETL:
             )
 
         if self.endpoint not in self.available_endpoint_parsers:
-            raise KeyError(f"{self.endpoint} is not in the available endpoint parsers")
+            raise ValueError(
+                f"{self.endpoint} is not in the available endpoint parsers"
+            )
 
         try:
             folder_name = os.path.basename(os.path.dirname(path))
@@ -95,7 +97,7 @@ class FitbitETL:
 
         except ValueError as exc:
             raise ValueError(
-                "Could not parse date from path, should be of format /[date]/[filename].format"
+                "Could not parse date from path, should be of format /[date]/[filename].format with date as YYYYMMDD"
             ) from exc
 
         self.path = path
@@ -206,22 +208,22 @@ class FitbitETL:
 
         if "activities" not in input_data:
             raise KeyError("Summary data is missing activities object")
-        if "goals" not in input_data:
-            raise KeyError("Summary data is missing goals object")
         if "summary" not in input_data:
             raise KeyError("Summary data is missing summary object")
 
         # Activities  section of summary response
-        activities = self._transform_activities(input_data["activities"])
-        table_name = constants.TABLE_NAME_MAPPING[f"{self.endpoint}_activity"]
-        self.data_loader.load(activities, table_name)
+        if input_data["activities"]:
+            activities = self._transform_activities(input_data["activities"])
+            table_name = constants.TABLE_NAME_MAPPING[f"{self.endpoint}_activity"]
+            self.data_loader.load(activities, table_name)
 
         # Goals section of summary response
-        goals = self._transform_dict_from_metadata(
-            input_data["goals"], constants.GOAL_FIELDS
-        )
-        table_name = constants.TABLE_NAME_MAPPING[f"{self.endpoint}_goals"]
-        self.data_loader.load([goals], table_name)
+        if "goals" in input_data:
+            goals = self._transform_dict_from_metadata(
+                input_data["goals"], constants.GOAL_FIELDS
+            )
+            table_name = constants.TABLE_NAME_MAPPING[f"{self.endpoint}_goals"]
+            self.data_loader.load([goals], table_name)
 
         # Summary stats for day
         summary = input_data["summary"].copy()
@@ -303,6 +305,7 @@ class FitbitETL:
             output_data_details.extend(details_list)
 
         table_name = constants.TABLE_NAME_MAPPING[self.endpoint]
+
         self.data_loader.load(output_data, table_name)
         self.data_loader.load(output_data_details, f"{table_name}_detail")
 

@@ -1,2 +1,7 @@
 [run]
-omit = */tests/*
+omit = 
+    */tests/*
+    Source\FitbitExtract\local_testing.py
+    Source\FitbitExtract\local_fitbit_authorise_main.py
+    Source\FitbitExtract\main.py
+    Source\FitbitExtract\helper\localfunctions.py

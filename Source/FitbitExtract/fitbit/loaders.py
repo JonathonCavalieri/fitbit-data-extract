@@ -8,10 +8,10 @@ from google.cloud import bigquery
 
 class DataLoader(Protocol):
     def extract(self, path: str) -> dict:
-        pass
+        """Extract method for DataLoader Protocol"""
 
     def load(self, data: list[dict], name: str) -> None:
-        pass
+        """Load method for DataLoader Protocol"""
 
 
 class LocalDataLoader:
@@ -71,11 +71,12 @@ class GCPDataLoader:
     def load(self, data: list[dict], name: str) -> None:
         table_name = f"{self.project_id}.{self.dataset_name}.{name}"
 
-        errors = self.bigquery_client.insert_rows_json(table_name, data)
+        if data:
+            errors = self.bigquery_client.insert_rows_json(table_name, data)
 
-        if errors == []:
-            print(f"New rows have been added to table {table_name}")
-        else:
-            raise ValueError(
-                f"Encountered errors while inserting rows into table: {name} \nErrors:\n {errors}"
-            )
+            if not errors:
+                print(f"New rows have been added to table {table_name}")
+            else:
+                raise ValueError(
+                    f"Encountered errors while inserting rows into table: {name} \nErrors:\n {errors}"
+                )

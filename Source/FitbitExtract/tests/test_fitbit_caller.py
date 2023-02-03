@@ -63,7 +63,11 @@ def test_make_registered_requests_for_date_single(tmp_path, fitbitcaller) -> Non
     date = datetime.strptime("2023-01-17", "%Y-%m-%d").date()
     data_str = date.strftime("%Y%m%d")
     folder = f"{tmp_path}/{endpoint.name}/{data_str}"
-    file_name = f"heart_rate_{fitbitcaller.user_token.user_id}"
+
+    url_func = fitbitcaller.available_endpoints[endpoint.name]
+    _, instance_name = url_func(date, **endpoint.url_kwargs)
+
+    file_name = f"{instance_name}_{fitbitcaller.user_token.user_id}"
     expected_file_path = f"{folder}/{file_name}.json"
 
     fitbitcaller.register_endpoint(endpoint)
@@ -104,7 +108,10 @@ def test_make_registered_requests_for_date_unauthorized(tmp_path, fitbitcaller) 
     date = datetime.strptime("2023-01-17", "%Y-%m-%d").date()
     data_str = date.strftime("%Y%m%d")
     folder = f"{tmp_path}/{endpoint.name}/{data_str}"
-    file_name = f"heart_rate_{fitbitcaller.user_token.user_id}"
+    url_func = fitbitcaller.available_endpoints[endpoint.name]
+    _, instance_name = url_func(date, **endpoint.url_kwargs)
+
+    file_name = f"{instance_name}_{fitbitcaller.user_token.user_id}"
     expected_file_path = f"{folder}/{file_name}.json"
     fitbitcaller.requester.http_status = HTTPStatus.UNAUTHORIZED
 
@@ -148,6 +155,19 @@ def test_make_registered_requests_for_date_too_many_retries(fitbitcaller) -> Non
         fitbitcaller.make_registered_requests_for_date(date, retries)
 
 
+def test_make_registered_requests_for_date_forbidden(fitbitcaller) -> None:
+    """Testing make_registered_requests method of FitBitCaller class"""
+
+    date = datetime.strptime("2023-01-17", "%Y-%m-%d").date()
+    fitbitcaller.register_endpoint(
+        caller.EndpointParameters("get_heart_rate_by_date", "GET", "json")
+    )
+    fitbitcaller.requester.http_status = HTTPStatus.FORBIDDEN
+    fitbitcaller.requester.ok_after = 99
+    with pytest.raises(Exception, match="Request is forbidden please check user scope"):
+        fitbitcaller.make_registered_requests_for_date(date)
+
+
 ##################################################
 # Test the FitBitCaller Class create url methods #
 ##################################################
@@ -162,7 +182,7 @@ def test_create_url_heart_rate_default_case(fitbitcaller, api_token) -> None:
     url, save_name = fitbitcaller.create_url_heart_rate(date)
 
     assert url == expected_url
-    assert save_name == "heart_rate"
+    assert save_name == "get_heart_rate_by_date"
 
 
 def test_create_url_heart_rate(fitbitcaller, api_token) -> None:
@@ -173,7 +193,7 @@ def test_create_url_heart_rate(fitbitcaller, api_token) -> None:
     url, save_name = fitbitcaller.create_url_heart_rate(date, period=period)
 
     assert url == expected_url
-    assert save_name == "heart_rate"
+    assert save_name == "get_heart_rate_by_date"
 
 
 def test_create_url_heart_rate_bad_period_value(fitbitcaller) -> None:
@@ -193,7 +213,7 @@ def test_create_url_body_weight(fitbitcaller, api_token) -> None:
     url, save_name = fitbitcaller.create_url_body_weight(date)
 
     assert url == expected_url
-    assert save_name == "body_weight"
+    assert save_name == "get_body_weight_by_date"
 
 
 def test_create_url_activity_summary(fitbitcaller, api_token) -> None:
@@ -205,4 +225,89 @@ def test_create_url_activity_summary(fitbitcaller, api_token) -> None:
     url, save_name = fitbitcaller.create_url_activity_summary(date)
 
     assert url == expected_url
-    assert save_name == "activity_summary"
+    assert save_name == "get_activity_summary_by_date"
+
+
+def test_create_url_activity_tcx(fitbitcaller, api_token) -> None:
+    """Testing create_url_activity_tcx method of FitBitCaller class with default parameters"""
+    date = datetime.strptime("2014-01-04", "%Y-%m-%d").date()
+    log_id = "test"
+    expected_url = f"{WEB_API_URL}/1/user/{api_token.user_id}/activities/{log_id}.tcx?includePartialTCX=true"
+
+    url, save_name = fitbitcaller.create_url_activity_tcx(date, log_id=log_id)
+
+    assert url == expected_url
+    assert save_name == f"{log_id}_get_activity_tcx_by_id"
+
+
+def test_create_url_activity_tcx_no_partialtcx(fitbitcaller, api_token) -> None:
+    """Testing create_url_activity_tcx method of FitBitCaller class with no partial tcx parameter"""
+    date = datetime.strptime("2014-01-04", "%Y-%m-%d").date()
+    log_id = "test"
+    expected_url = f"{WEB_API_URL}/1/user/{api_token.user_id}/activities/{log_id}.tcx?includePartialTCX=false"
+
+    url, save_name = fitbitcaller.create_url_activity_tcx(
+        date, log_id=log_id, partialtcx=False
+    )
+
+    assert url == expected_url
+    assert save_name == f"{log_id}_get_activity_tcx_by_id"
+
+
+def test_create_url_activity_tcx_no_logid(fitbitcaller) -> None:
+    """Testing create_url_activity_tcx method of FitBitCaller class when no log_id is provided"""
+    date = datetime.strptime("2014-01-04", "%Y-%m-%d").date()
+
+    with pytest.raises(ValueError, match="log_id was not provided as a parameter"):
+        fitbitcaller.create_url_activity_tcx(date)
+
+
+def test_create_url_activity_details(fitbitcaller, api_token) -> None:
+    """Testing create_url_activity_details method of FitBitCaller class with default parameters"""
+    log_id = "test"
+    date = datetime.strptime("2014-01-04", "%Y-%m-%d").date()
+    expected_url = f"{WEB_API_URL}/1/user/{api_token.user_id}/activities/{log_id}.json"
+
+    url, save_name = fitbitcaller.create_url_activity_details(date, log_id=log_id)
+    assert url == expected_url
+    assert save_name == f"{log_id}_get_activity_details_by_id"
+
+
+def test_create_url_activity_details_no_log_id(fitbitcaller) -> None:
+    """Testing create_url_activity_details method of FitBitCaller class when no log id is provided"""
+    date = datetime.strptime("2014-01-04", "%Y-%m-%d").date()
+
+    with pytest.raises(ValueError, match="log_id was not provided as a parameter"):
+        fitbitcaller.create_url_activity_details(date)
+
+
+def test_create_url_heart_rate_variablity(fitbitcaller, api_token) -> None:
+    """Testing create_url_heart_rate_variablity method of FitBitCaller class with default parameters"""
+    date = datetime.strptime("2014-01-04", "%Y-%m-%d").date()
+    expected_url = f"{WEB_API_URL}/1/user/{api_token.user_id}/hrv/date/{date}/all.json"
+    url, save_name = fitbitcaller.create_url_heart_rate_variablity(date)
+
+    assert url == expected_url
+    assert save_name == "get_heart_rate_variablity_by_date"
+
+
+def test_create_url_cardio_score(fitbitcaller, api_token) -> None:
+    """Testing create_url_cardio_score method of FitBitCaller class with default parameters"""
+    date = datetime.strptime("2014-01-04", "%Y-%m-%d").date()
+    expected_url = (
+        f"{WEB_API_URL}/1/user/{api_token.user_id}/cardioscore/date/{date}.json"
+    )
+    url, save_name = fitbitcaller.create_url_cardio_score(date)
+
+    assert url == expected_url
+    assert save_name == "get_cardio_score_by_date"
+
+
+def test_create_url_sleep(fitbitcaller, api_token) -> None:
+    """Testing create_url_sleep method of FitBitCaller class with default parameters"""
+    date = datetime.strptime("2014-01-04", "%Y-%m-%d").date()
+    expected_url = f"{WEB_API_URL}/1.2/user/{api_token.user_id}/sleep/date/{date}.json"
+    url, save_name = fitbitcaller.create_url_sleep(date)
+
+    assert url == expected_url
+    assert save_name == "get_sleep_by_date"

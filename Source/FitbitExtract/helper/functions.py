@@ -9,8 +9,8 @@ from fitbit.authorization import CloudTokenManager
 from fitbit.requesters import WebAPIRequester
 from fitbit.savers import GCPResponseSaver
 from fitbit.caller import FitBitCaller, EndpointParameters
-from fitbit.messenger import PubSubMessenger
-from fitbit.transform import FitbitETL
+from fitbit.messengers import PubSubMessenger
+from fitbit.transformers import FitbitETL
 from fitbit.loaders import GCPDataLoader
 from helper.constants import ENDPOINTS
 
@@ -22,7 +22,7 @@ def call_api(
     project_id: str,
     bucket_name_cred: str,
     bucket_name_file: str,
-) -> None:
+) -> None:  # pragma: no cover
 
     token_manager = CloudTokenManager(project_id, bucket_name_cred, user_id)
     fitbit_requester = WebAPIRequester()
@@ -127,7 +127,7 @@ def transform_load(
     file_name: str,
     topic_name: str,
     dataset_name: str,
-) -> None:
+) -> None:  # pragma: no cover
     messenger = PubSubMessenger(project_id, topic_name)
     loader = GCPDataLoader(project_id, file_bucket, dataset_name)
     transformer = FitbitETL(loader, messenger)

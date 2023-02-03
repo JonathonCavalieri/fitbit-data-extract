@@ -9,10 +9,10 @@ class Messenger(Protocol):
     def prep_message(
         self, messages: list[EndpointParameters], user_id: str, date: str
     ) -> str:
-        pass
+        """prep_message method for Messenger Protocol"""
 
     def send_message(self, message: str) -> str:
-        pass
+        """send_message method for Messenger Protocol"""
 
 
 class LocalMessenger:

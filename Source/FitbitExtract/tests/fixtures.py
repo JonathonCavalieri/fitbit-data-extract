@@ -1,42 +1,12 @@
 from http import HTTPStatus
+from datetime import datetime
 import json
 import os
 import pytest
-import uuid
-
-from google.cloud import storage
-
-import fitbit.authorization as auth
-import fitbit.caller as caller
-import fitbit.savers as savers
-import fitbit.requesters as requesters
-
-###############################
-# Get GCP objects for testing #
-###############################
-CONFIG_DIRECTORY = "config.json"
-if not os.path.exists(CONFIG_DIRECTORY):
-    raise Exception("No config.json file found")
-
-with open(CONFIG_DIRECTORY, "r", encoding="utf-8") as config_file:
-    config_dictionary = json.load(config_file)
-
-if "testing_gcp_project" not in config_dictionary:
-    raise KeyError("Please add to testing_gcp_project")
-
-if (
-    config_dictionary["testing_gcp_project"] == ""
-    or config_dictionary["testing_gcp_project"] is None
-):
-    raise KeyError("Please add to testing_gcp_project")
-
-GCP_PROJECT_ID = config_dictionary["testing_gcp_project"]
 
 
-@pytest.fixture(scope="session")
-def gcp_storage_client() -> storage.Client:
-    """A GCS storage client fixture for testing for the testing project specified in config file"""
-    return storage.Client(GCP_PROJECT_ID)
+from fitbit import authorization as auth
+from fitbit import caller, savers, requesters, loaders, messengers, transformers
 
 
 ############################################
@@ -92,24 +62,6 @@ class TestingTokenManager:
 
     def save_token(self, token: auth.FitbitToken) -> None:
         """Save API Token to storage"""
-
-
-##########################################
-# Create GCP Bucket for testing purposes #
-##########################################
-@pytest.fixture(scope="session")
-def gcp_response_saver(gcp_storage_client) -> savers.GCPResponseSaver:
-    """
-    A testing GCP response saver object. This creates a GCP bucket in the test project id
-    specified in the config that will be deleted after running tests
-    """
-    session_id = uuid.uuid1()
-    bucket_name = f"testing_bucket_{session_id}"
-    gcp_storage_client.create_bucket(bucket_name)
-    response_saver = savers.GCPResponseSaver(bucket_name, GCP_PROJECT_ID)
-    yield response_saver
-
-    response_saver.bucket.delete(force=True)
 
 
 ############################################
@@ -197,4 +149,130 @@ def fitbitcaller(
 
 @pytest.fixture()
 def requester() -> requesters.WebAPIRequester:
+    """Requester fixture for testing"""
     return requesters.WebAPIRequester()
+
+
+@pytest.fixture()
+def loader() -> loaders.LocalDataLoader:
+    """Local Data Loader for Testing"""
+    return loaders.LocalDataLoader()
+
+
+@pytest.fixture()
+def messenger() -> messengers.LocalMessenger:
+    """Local Messenger fixture for Testing"""
+    return messengers.LocalMessenger()
+
+
+@pytest.fixture()
+def transformer(loader, messenger) -> transformers.FitbitETL:
+    """FitBit ETL transformer fixture for Testing"""
+
+    a_transformer = transformers.FitbitETL(loader, messenger)
+    # Overide the processing time with a static value
+    a_transformer.processing_datetime = "2023-02-03 12:31:38"
+    return a_transformer
+
+
+#####################################
+# Create files for testing purposes #
+#####################################
+
+
+@pytest.fixture()
+def config_file():
+    return "Source/FitbitExtract/tests/testing_data_files/test_config/test_config.json"
+
+
+@pytest.fixture(scope="session")
+def session_temp(tmp_path_factory):
+    """Global session temp path for data"""
+    path = tmp_path_factory.mktemp("temp_data")
+    path = os.path.join(path, "20230118")
+    os.mkdir(path)
+    return path
+
+
+@pytest.fixture(scope="session")
+def test_data_path(session_temp) -> tuple[str, dict]:
+    data = {"cardioScore": [{"dateTime": "2023-01-18", "value": {"vo2Max": "44-48"}}]}
+    path = f"{session_temp}/get_cardio_score_by_date_TESTUSER.json"
+    with open(path, "w", encoding="utf-8") as file:
+        json.dump(data, file, indent=4)
+
+    return (path, data)
+
+
+@pytest.fixture(scope="session")
+def test_data_path_tcx(session_temp) -> tuple[str, dict]:
+    """testing file for xml data"""
+
+    data = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+    <TrainingCenterDatabase xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2">
+        <Activities>
+            <Activity Sport="Running">
+                <Id>2022-10-13T07:07:03.000+11:00</Id>
+                <Lap StartTime="2022-10-13T07:07:03.000+11:00">
+                    <TotalTimeSeconds>414.0</TotalTimeSeconds>
+                    <DistanceMeters>1000.0</DistanceMeters>
+                    <Calories>67</Calories>
+                    <Intensity>Active</Intensity>
+                    <TriggerMethod>Manual</TriggerMethod>
+                    <Track>
+                        <Trackpoint>
+                            <Time>2022-10-13T07:07:03.000+11:00</Time>
+                            <Position>
+                                <LatitudeDegrees>-33.89690887928009</LatitudeDegrees>
+                                <LongitudeDegrees>151.19783425331116</LongitudeDegrees>
+                            </Position>
+                            <AltitudeMeters>44.48640000833932</AltitudeMeters>
+                            <DistanceMeters>0.0</DistanceMeters>
+                            <HeartRateBpm>
+                                <Value>90</Value>
+                            </HeartRateBpm>
+                        </Trackpoint>
+                    </Track>
+                </Lap>
+                <Creator xsi:type="Device_t" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+                    <UnitId>0</UnitId>
+                    <ProductID>0</ProductID>
+                </Creator>
+            </Activity>
+        </Activities>
+    </TrainingCenterDatabase>
+    """
+
+    path = f"{session_temp}/activities.tcx"
+    with open(path, "w", encoding="utf-8") as file:
+        file.write(data)
+
+    return (path, data)
+
+
+#####################################
+# Create files for testing purposes #
+#####################################
+
+
+@pytest.fixture(scope="session")
+def testing_data_dictionarys() -> dict:
+    test_files_directory = "Source/FitbitExtract/tests/testing_data_files/endpoint_data"
+    transformer = transformers.FitbitETL(loaders.LocalDataLoader(), None)
+    out_dict = {}
+    for root, _, files in os.walk(test_files_directory):
+        for file in files:
+            file_path = os.path.join(root, file)
+            transformer.get_details_from_path(file_path)
+            data = transformer.extract_data()
+            temp_dict = {
+                "data": data,
+                "user_id": transformer.user_id,
+                "date": transformer.date,
+            }
+            if transformer.instance_id:
+                temp_dict["instance_id"] = transformer.instance_id
+
+            out_dict[transformer.endpoint] = temp_dict
+
+    return out_dict
