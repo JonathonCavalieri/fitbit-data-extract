@@ -130,6 +130,6 @@ def transform_load(
 ) -> None:  # pragma: no cover
     messenger = PubSubMessenger(project_id, topic_name)
     loader = GCPDataLoader(project_id, file_bucket, dataset_name)
-    transformer = FitbitETL(loader, messenger)
+    transformer = FitbitETL(loader, messenger, file_bucket)
 
     transformer.process(file_name)

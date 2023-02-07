@@ -20,12 +20,14 @@ def package_cloud_function(
         return not any(check)
 
     # Clear and recreate temp directory
+    print('Creating Temporary directory...')
     temp_dir = os.path.join(destination_dir, "temp")
     if os.path.exists(temp_dir):
         shutil.rmtree(temp_dir)
     os.mkdir(temp_dir)
 
     # Copy Config to temp directory
+    print('Copying config to temporary directory...')
     if os.path.exists(config_file):
         config_destination = os.path.join(temp_dir, config_file)
         shutil.copyfile(config_file, config_destination)
@@ -33,7 +35,7 @@ def package_cloud_function(
     # Get all files. remove temp, local and testings files
     files = os.listdir(source_dir)
     files = [file for file in files if check_prefix(file)]
-
+    print('Copying files to temporary directory...')
     # Copy files and folders to temp location
     for file in files:
         source = os.path.join(source_dir, file)
@@ -42,7 +44,7 @@ def package_cloud_function(
             shutil.copytree(source, destination)
         else:
             shutil.copyfile(source, destination)
-
+    print('Making Archive file...')
     # Make an archive of the file
     archive_name = os.path.join(destination_dir, function_name)
     if os.path.exists(archive_name):

@@ -1,8 +1,8 @@
-requests
-google-cloud-storage
-google-cloud-secret-manager
-google-cloud-pubsub
-google-cloud-bigquery
-cryptography
+requests==2.28.2
+google-cloud-bigquery==3.5.0
+google-cloud-core==2.3.2
+google-cloud-pubsub==2.14.0
+google-cloud-secret-manager==2.15.1
+google-cloud-storage==2.7.0
+cryptography==39.0.0
 functions-framework==3.0.0
-pandas

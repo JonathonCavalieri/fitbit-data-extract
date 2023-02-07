@@ -19,9 +19,13 @@ class LocalMessenger:
     def prep_message(
         self, messages: list[EndpointParameters], user_id: str, date: str
     ) -> str:
-        endpoint_messages = []
-        for message in messages:
-            endpoint_messages.append(asdict(message))
+        if messages == ['all']:
+            endpoint_messages = ['all']
+        else:
+            endpoint_messages = []
+            for message in messages:
+                endpoint_messages.append(asdict(message))
+
 
         pubsub_message = {
             "user_id": user_id,
@@ -47,9 +51,13 @@ class PubSubMessenger:
     def prep_message(
         self, messages: list[EndpointParameters], user_id: str, date: str
     ) -> str:
-        endpoint_messages = []
-        for message in messages:
-            endpoint_messages.append(asdict(message))
+        
+        if messages == ['all']:
+            endpoint_messages = ['all']
+        else:
+            endpoint_messages = []
+            for message in messages:
+                endpoint_messages.append(asdict(message))
 
         pubsub_message = {
             "user_id": user_id,

@@ -47,7 +47,7 @@ def convert_to_number(string_value: str):
 
 
 class FitbitETL:
-    def __init__(self, data_loader: DataLoader, messenger: Messenger) -> None:
+    def __init__(self, data_loader: DataLoader, messenger: Messenger, data_source:str = None) -> None:
         self.data_loader = data_loader
         self.available_endpoint_parsers = {
             "get_heart_rate_by_date": self._transform_load_heart_rate_data,
@@ -65,6 +65,7 @@ class FitbitETL:
         self.date = None
         self.instance_id = None
         self.messenger = messenger
+        self.data_source = data_source
 
     def process(self, path: str) -> None:
         self.get_details_from_path(path)
@@ -140,6 +141,7 @@ class FitbitETL:
             "user_id": self.user_id,
             "processed_date": self.processing_datetime,
             "api_endpoint": self.endpoint,
+            "data_source": self.data_source,
             "file_processed": self.path,
         }
 
@@ -277,15 +279,22 @@ class FitbitETL:
 
     def _transform_sleep_detail(self, sleep_details: dict, log_id: int) -> list[dict]:
 
-        sleep_details_combine = sleep_details["data"] + sleep_details["shortData"]
         return_list = []
-        for row in sleep_details_combine:
+        for row in sleep_details["data"]:
             new_row = self._transform_dict_from_metadata(
                 row, constants.SLEEP_DETAILS_FIELDS, ["dateTime"], False, False, False
             )
             new_row["log_id"] = log_id
+            new_row["type"] = "data"
             return_list.append(new_row)
-
+            
+        for row in sleep_details["shortData"]:
+            new_row = self._transform_dict_from_metadata(
+                row, constants.SLEEP_DETAILS_FIELDS, ["dateTime"], False, False, False
+            )
+            new_row["log_id"] = log_id
+            new_row["type"] = "short_data"
+            return_list.append(new_row)
         return return_list
 
     def _transform_load_sleep_data(self, input_data: dict) -> None:

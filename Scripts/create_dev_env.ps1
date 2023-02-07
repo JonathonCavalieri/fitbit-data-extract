@@ -16,4 +16,11 @@ If(!(test-path -PathType container $env_name))
     python -m venv $env_name
 }
 
-#TODO Add installing requirements.txt file
+#Activate python env
+.\fitbit-dev\Scripts\Activate.ps1
+#Install requirements.txt file
+if ($env:VIRTUAL_ENV.EndsWith($env_name))
+{
+    set-location ..\Scripts
+    pip install -r requirements.txt
+}

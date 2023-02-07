@@ -5,5 +5,6 @@
   "gcp_bucket_credentials": "gcp_bucket_credentials",
   "gcp_bq_dataset" : "gcp_bq_dataset",
   "testing_gcp_project": "testing_gcp_project",
-  "pub_sub_topic_name": "pub_sub_topic_name"
+  "pub_sub_topic_name": "pub_sub_topic_name",
+  "user_id": "user_id"
 }

@@ -141,6 +141,7 @@ SLEEP_FIELDS = {
 SLEEP_DETAILS_FIELDS = {
     "logId": {"bq_name": "log_id", "bq_type": "INT64"},
     "dateTime": {"bq_name": "date_time", "bq_type": "TIMESTAMP"},
+    "type": {"bq_name": "type", "bq_type": "STRING"},
     "level": {"bq_name": "level", "bq_type": "STRING"},
     "seconds": {"bq_name": "seconds", "bq_type": "INT64"},
 }
@@ -192,6 +193,7 @@ FILES_PROCESSED_FIELDS = {
     "user_id": {"bq_name": "user_id", "bq_type": "STRING"},
     "processed_date": {"bq_name": "processed_date", "bq_type": "TIMESTAMP"},
     "api_endpoint": {"bq_name": "api_endpoint", "bq_type": "STRING"},
+    "data_source": {"bq_name": "data_source", "bq_type": "STRING"},
     "file_processed": {"bq_name": "file_processed", "bq_type": "STRING"},
 }
 

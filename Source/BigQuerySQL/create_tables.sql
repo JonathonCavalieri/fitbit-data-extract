@@ -113,6 +113,7 @@ BEGIN
 		user_id STRING,
 		processed_date TIMESTAMP,
 		api_endpoint STRING,
+		data_source STRING,
 		file_processed STRING,
 	);
 
@@ -155,6 +156,7 @@ BEGIN
 	CREATE OR REPLACE TABLE `fitbit-data-extract.fitbit.sleep_detail`(
 		log_id INT64,
 		date_time TIMESTAMP,
+		type STRING,
 		level STRING,
 		seconds INT64,
 	);
