@@ -155,6 +155,7 @@ BEGIN
 --------------------------
 	CREATE OR REPLACE TABLE `fitbit-data-extract.fitbit.sleep_detail`(
 		log_id INT64,
+		date DATE,
 		date_time TIMESTAMP,
 		type STRING,
 		level STRING,

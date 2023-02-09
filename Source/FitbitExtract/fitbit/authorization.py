@@ -304,7 +304,7 @@ class CloudTokenManager:
         """Load API Token from storage"""
         blob_name = f"{self.parameters.token_folder}/{self.user_id}_token_encrypted"
         blob = self.bucket.get_blob(blob_name)
-        token_file = blob.download_as_string()
+        token_file = blob.download_as_bytes()
         token_file = self.encryption_key.decrypt(token_file)
         token_file = json.loads(token_file)
 

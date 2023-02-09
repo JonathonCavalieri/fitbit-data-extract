@@ -5,7 +5,6 @@ from tests.fixtures import transformer, loader, messenger
 from tests.fixtures import test_data_path, test_data_path_tcx, session_temp
 from tests.fixtures import testing_data_dictionarys
 from fitbit.caller import EndpointParameters
-
 from fitbit import transformers
 
 
@@ -168,7 +167,7 @@ def test_call_additional_endpoints(transformer, capsys) -> None:
     """Tests the call_additional_endpoints method of the FitBitETL class"""
     endpoints = [EndpointParameters("test1"), EndpointParameters("test2")]
     transformer.additional_api_calls = endpoints
-    transformer.date = datetime.now().date()
+    transformer.date = datetime.strptime("2023-02-03", "%Y-%m-%d")
     transformer.call_additional_endpoints()
 
     captured = capsys.readouterr()
@@ -186,7 +185,7 @@ def test_log_processing(transformer, capsys) -> None:
 
     transformer.log_processing()
     captured = capsys.readouterr()
-    expected_value = """files_processed {'date': '2023-01-01', 'user_id': 'TESTUSER', 'processed_date': '2023-02-03 12:31:38', 'api_endpoint': 'get_cardio_score_by_date', 'file_processed': '20230101/get_cardio_score_by_date_TESTUSER.json'}
+    expected_value = """files_processed {'date': '2023-01-01', 'user_id': 'TESTUSER', 'processed_date': '2023-02-03 12:31:38', 'api_endpoint': 'get_cardio_score_by_date', 'data_source': None, 'file_processed': '20230101/get_cardio_score_by_date_TESTUSER.json'}
 """
     assert captured.out == expected_value
 
@@ -198,7 +197,7 @@ def test_process(transformer, capsys, test_data_path) -> None:
     captured = capsys.readouterr()
     data_value = "cardioscore {'date': '2023-01-18', 'vo2_max': '44-48', 'user_id': 'TESTUSER', 'processed_date': '2023-02-03 12:31:38'}\n"
     log_value = (
-        "files_processed {'date': '2023-01-18', 'user_id': 'TESTUSER', 'processed_date': '2023-02-03 12:31:38', 'api_endpoint': 'get_cardio_score_by_date', 'file_processed': '"
+        "files_processed {'date': '2023-01-18', 'user_id': 'TESTUSER', 'processed_date': '2023-02-03 12:31:38', 'api_endpoint': 'get_cardio_score_by_date', 'data_source': None, 'file_processed': '"
         + file_path
         + "'}\n"
     )
@@ -321,60 +320,61 @@ def test_transform_load_sleep_data(
     endpoint = "get_sleep_by_date"
     transform_test_helper(transformer, endpoint, testing_data_dictionarys)
     captured = capsys.readouterr()
+
     expected_value = """sleep {'date': '2023-01-18', 'duration': 27600000, 'efficiency': 88, 'end_time': '2023-01-18T06:25:00.000', 'info_code': 0, 'is_main_sleep': True, 'log_id': 39842924697, 'log_type': 'auto_detected', 'minutes_after_wakeup': 4, 'minutes_asleep': 385, 'minutes_awake': 75, 'minutes_to_fall_asleep': 0, 'start_time': '2023-01-17T22:45:00.000', 'time_in_bed': 460, 'type': 'stages', 'user_id': 'TESTUSER', 'processed_date': '2023-02-03 12:31:38'}
-sleep_detail {'date_time': '2023-01-17 22:45:00', 'level': 'wake', 'seconds': 990, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-17 23:01:30', 'level': 'light', 'seconds': 1200, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-17 23:21:30', 'level': 'deep', 'seconds': 510, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-17 23:30:00', 'level': 'light', 'seconds': 1350, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-17 23:52:30', 'level': 'deep', 'seconds': 1170, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 00:12:00', 'level': 'light', 'seconds': 600, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 00:22:00', 'level': 'rem', 'seconds': 1380, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 00:45:00', 'level': 'light', 'seconds': 2850, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 01:32:30', 'level': 'deep', 'seconds': 1080, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 01:50:30', 'level': 'light', 'seconds': 960, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 02:06:30', 'level': 'wake', 'seconds': 420, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 02:13:30', 'level': 'light', 'seconds': 150, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 02:16:00', 'level': 'rem', 'seconds': 1800, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 02:46:00', 'level': 'wake', 'seconds': 420, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 02:53:00', 'level': 'light', 'seconds': 3480, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 03:51:00', 'level': 'rem', 'seconds': 2940, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 04:40:00', 'level': 'light', 'seconds': 1380, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 05:03:00', 'level': 'deep', 'seconds': 1680, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 05:31:00', 'level': 'light', 'seconds': 240, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 05:35:00', 'level': 'rem', 'seconds': 1050, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 05:52:30', 'level': 'wake', 'seconds': 390, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 05:59:00', 'level': 'light', 'seconds': 840, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 06:13:00', 'level': 'wake', 'seconds': 720, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-17 23:04:30', 'level': 'wake', 'seconds': 30, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-17 23:07:00', 'level': 'wake', 'seconds': 120, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-17 23:10:30', 'level': 'wake', 'seconds': 120, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-17 23:15:00', 'level': 'wake', 'seconds': 30, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-17 23:30:00', 'level': 'wake', 'seconds': 30, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-17 23:48:00', 'level': 'wake', 'seconds': 30, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 00:10:30', 'level': 'wake', 'seconds': 90, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 00:44:30', 'level': 'wake', 'seconds': 30, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 00:46:30', 'level': 'wake', 'seconds': 30, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 01:24:30', 'level': 'wake', 'seconds': 30, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 01:48:30', 'level': 'wake', 'seconds': 120, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 01:52:30', 'level': 'wake', 'seconds': 30, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 01:58:30', 'level': 'wake', 'seconds': 60, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 02:02:30', 'level': 'wake', 'seconds': 90, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 02:16:00', 'level': 'wake', 'seconds': 60, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 02:26:30', 'level': 'wake', 'seconds': 30, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 02:35:00', 'level': 'wake', 'seconds': 30, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 02:38:00', 'level': 'wake', 'seconds': 30, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 02:41:00', 'level': 'wake', 'seconds': 30, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 02:43:00', 'level': 'wake', 'seconds': 30, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 03:01:00', 'level': 'wake', 'seconds': 30, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 03:12:00', 'level': 'wake', 'seconds': 120, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 03:16:00', 'level': 'wake', 'seconds': 60, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 03:31:30', 'level': 'wake', 'seconds': 30, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 03:46:30', 'level': 'wake', 'seconds': 30, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 04:28:00', 'level': 'wake', 'seconds': 30, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 04:45:30', 'level': 'wake', 'seconds': 30, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 05:29:00', 'level': 'wake', 'seconds': 120, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 05:49:30', 'level': 'wake', 'seconds': 30, 'log_id': 39842924697}
-sleep_detail {'date_time': '2023-01-18 06:06:30', 'level': 'wake', 'seconds': 60, 'log_id': 39842924697}
+sleep_detail {'date_time': '2023-01-17 22:45:00', 'level': 'wake', 'seconds': 990, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'data'}
+sleep_detail {'date_time': '2023-01-17 23:01:30', 'level': 'light', 'seconds': 1200, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'data'}
+sleep_detail {'date_time': '2023-01-17 23:21:30', 'level': 'deep', 'seconds': 510, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'data'}
+sleep_detail {'date_time': '2023-01-17 23:30:00', 'level': 'light', 'seconds': 1350, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'data'}
+sleep_detail {'date_time': '2023-01-17 23:52:30', 'level': 'deep', 'seconds': 1170, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'data'}
+sleep_detail {'date_time': '2023-01-18 00:12:00', 'level': 'light', 'seconds': 600, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'data'}
+sleep_detail {'date_time': '2023-01-18 00:22:00', 'level': 'rem', 'seconds': 1380, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'data'}
+sleep_detail {'date_time': '2023-01-18 00:45:00', 'level': 'light', 'seconds': 2850, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'data'}
+sleep_detail {'date_time': '2023-01-18 01:32:30', 'level': 'deep', 'seconds': 1080, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'data'}
+sleep_detail {'date_time': '2023-01-18 01:50:30', 'level': 'light', 'seconds': 960, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'data'}
+sleep_detail {'date_time': '2023-01-18 02:06:30', 'level': 'wake', 'seconds': 420, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'data'}
+sleep_detail {'date_time': '2023-01-18 02:13:30', 'level': 'light', 'seconds': 150, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'data'}
+sleep_detail {'date_time': '2023-01-18 02:16:00', 'level': 'rem', 'seconds': 1800, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'data'}
+sleep_detail {'date_time': '2023-01-18 02:46:00', 'level': 'wake', 'seconds': 420, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'data'}
+sleep_detail {'date_time': '2023-01-18 02:53:00', 'level': 'light', 'seconds': 3480, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'data'}
+sleep_detail {'date_time': '2023-01-18 03:51:00', 'level': 'rem', 'seconds': 2940, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'data'}
+sleep_detail {'date_time': '2023-01-18 04:40:00', 'level': 'light', 'seconds': 1380, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'data'}
+sleep_detail {'date_time': '2023-01-18 05:03:00', 'level': 'deep', 'seconds': 1680, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'data'}
+sleep_detail {'date_time': '2023-01-18 05:31:00', 'level': 'light', 'seconds': 240, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'data'}
+sleep_detail {'date_time': '2023-01-18 05:35:00', 'level': 'rem', 'seconds': 1050, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'data'}
+sleep_detail {'date_time': '2023-01-18 05:52:30', 'level': 'wake', 'seconds': 390, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'data'}
+sleep_detail {'date_time': '2023-01-18 05:59:00', 'level': 'light', 'seconds': 840, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'data'}
+sleep_detail {'date_time': '2023-01-18 06:13:00', 'level': 'wake', 'seconds': 720, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'data'}
+sleep_detail {'date_time': '2023-01-17 23:04:30', 'level': 'wake', 'seconds': 30, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'short_data'}
+sleep_detail {'date_time': '2023-01-17 23:07:00', 'level': 'wake', 'seconds': 120, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'short_data'}
+sleep_detail {'date_time': '2023-01-17 23:10:30', 'level': 'wake', 'seconds': 120, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'short_data'}
+sleep_detail {'date_time': '2023-01-17 23:15:00', 'level': 'wake', 'seconds': 30, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'short_data'}
+sleep_detail {'date_time': '2023-01-17 23:30:00', 'level': 'wake', 'seconds': 30, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'short_data'}
+sleep_detail {'date_time': '2023-01-17 23:48:00', 'level': 'wake', 'seconds': 30, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'short_data'}
+sleep_detail {'date_time': '2023-01-18 00:10:30', 'level': 'wake', 'seconds': 90, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'short_data'}
+sleep_detail {'date_time': '2023-01-18 00:44:30', 'level': 'wake', 'seconds': 30, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'short_data'}
+sleep_detail {'date_time': '2023-01-18 00:46:30', 'level': 'wake', 'seconds': 30, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'short_data'}
+sleep_detail {'date_time': '2023-01-18 01:24:30', 'level': 'wake', 'seconds': 30, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'short_data'}
+sleep_detail {'date_time': '2023-01-18 01:48:30', 'level': 'wake', 'seconds': 120, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'short_data'}
+sleep_detail {'date_time': '2023-01-18 01:52:30', 'level': 'wake', 'seconds': 30, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'short_data'}
+sleep_detail {'date_time': '2023-01-18 01:58:30', 'level': 'wake', 'seconds': 60, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'short_data'}
+sleep_detail {'date_time': '2023-01-18 02:02:30', 'level': 'wake', 'seconds': 90, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'short_data'}
+sleep_detail {'date_time': '2023-01-18 02:16:00', 'level': 'wake', 'seconds': 60, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'short_data'}
+sleep_detail {'date_time': '2023-01-18 02:26:30', 'level': 'wake', 'seconds': 30, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'short_data'}
+sleep_detail {'date_time': '2023-01-18 02:35:00', 'level': 'wake', 'seconds': 30, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'short_data'}
+sleep_detail {'date_time': '2023-01-18 02:38:00', 'level': 'wake', 'seconds': 30, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'short_data'}
+sleep_detail {'date_time': '2023-01-18 02:41:00', 'level': 'wake', 'seconds': 30, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'short_data'}
+sleep_detail {'date_time': '2023-01-18 02:43:00', 'level': 'wake', 'seconds': 30, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'short_data'}
+sleep_detail {'date_time': '2023-01-18 03:01:00', 'level': 'wake', 'seconds': 30, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'short_data'}
+sleep_detail {'date_time': '2023-01-18 03:12:00', 'level': 'wake', 'seconds': 120, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'short_data'}
+sleep_detail {'date_time': '2023-01-18 03:16:00', 'level': 'wake', 'seconds': 60, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'short_data'}
+sleep_detail {'date_time': '2023-01-18 03:31:30', 'level': 'wake', 'seconds': 30, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'short_data'}
+sleep_detail {'date_time': '2023-01-18 03:46:30', 'level': 'wake', 'seconds': 30, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'short_data'}
+sleep_detail {'date_time': '2023-01-18 04:28:00', 'level': 'wake', 'seconds': 30, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'short_data'}
+sleep_detail {'date_time': '2023-01-18 04:45:30', 'level': 'wake', 'seconds': 30, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'short_data'}
+sleep_detail {'date_time': '2023-01-18 05:29:00', 'level': 'wake', 'seconds': 120, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'short_data'}
+sleep_detail {'date_time': '2023-01-18 05:49:30', 'level': 'wake', 'seconds': 30, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'short_data'}
+sleep_detail {'date_time': '2023-01-18 06:06:30', 'level': 'wake', 'seconds': 60, 'date': '2023-01-18', 'log_id': 39842924697, 'type': 'short_data'}
 """
 
     assert captured.out == expected_value

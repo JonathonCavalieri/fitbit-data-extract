@@ -1,6 +1,7 @@
 from typing import Protocol
 import os
 import json
+import re
 
 from google.cloud import storage
 from google.cloud import bigquery
@@ -53,6 +54,10 @@ class GCPDataLoader:
         self.bucket = self.storage_client.get_bucket(bucket_name)
         self.dataset_name = dataset_name
 
+        self.date_pattern = re.compile(
+            "^20[0-9]{2}-((0[1-9])|(1[0-2]))-([0-2][1-9]|3[0-1])$"
+        )
+
     def extract(self, path: str) -> dict:
         _, file_extension = os.path.splitext(path)
 
@@ -69,14 +74,17 @@ class GCPDataLoader:
         raise ValueError(f"file type {file_extension} is not supported")
 
     def load(self, data: list[dict], name: str) -> None:
+
+        if not data or data == []:
+            return None
+
         table_name = f"{self.project_id}.{self.dataset_name}.{name}"
 
-        if data:
-            errors = self.bigquery_client.insert_rows_json(table_name, data)
+        errors = self.bigquery_client.insert_rows_json(table_name, data)
 
-            if not errors:
-                print(f"New rows have been added to table {table_name}")
-            else:
-                raise ValueError(
-                    f"Encountered errors while inserting rows into table: {name} \nErrors:\n {errors}"
-                )
+        if not errors:
+            print(f"New rows have been added to table {table_name}")
+        else:
+            raise ValueError(
+                f"Encountered errors while inserting rows into table: {name} \nErrors:\n {errors}"
+            )

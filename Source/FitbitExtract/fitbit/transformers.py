@@ -280,21 +280,22 @@ class FitbitETL:
     def _transform_sleep_detail(self, sleep_details: dict, log_id: int) -> list[dict]:
 
         return_list = []
-        for row in sleep_details["data"]:
-            new_row = self._transform_dict_from_metadata(
-                row, constants.SLEEP_DETAILS_FIELDS, ["dateTime"], False, False, False
-            )
-            new_row["log_id"] = log_id
-            new_row["type"] = "data"
-            return_list.append(new_row)
-            
-        for row in sleep_details["shortData"]:
-            new_row = self._transform_dict_from_metadata(
-                row, constants.SLEEP_DETAILS_FIELDS, ["dateTime"], False, False, False
-            )
-            new_row["log_id"] = log_id
-            new_row["type"] = "short_data"
-            return_list.append(new_row)
+        if "data" in sleep_details:
+            for row in sleep_details["data"]:
+                new_row = self._transform_dict_from_metadata(
+                    row, constants.SLEEP_DETAILS_FIELDS, ["dateTime"], True, False, False
+                )
+                new_row["log_id"] = log_id
+                new_row["type"] = "data"
+                return_list.append(new_row)
+        if "shortData" in sleep_details:            
+            for row in sleep_details["shortData"]:
+                new_row = self._transform_dict_from_metadata(
+                    row, constants.SLEEP_DETAILS_FIELDS, ["dateTime"], True, False, False
+                )
+                new_row["log_id"] = log_id
+                new_row["type"] = "short_data"
+                return_list.append(new_row)
         return return_list
 
     def _transform_load_sleep_data(self, input_data: dict) -> None:

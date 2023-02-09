@@ -140,6 +140,7 @@ SLEEP_FIELDS = {
 
 SLEEP_DETAILS_FIELDS = {
     "logId": {"bq_name": "log_id", "bq_type": "INT64"},
+    "date": {"bq_name": "date", "bq_type": "DATE"},
     "dateTime": {"bq_name": "date_time", "bq_type": "TIMESTAMP"},
     "type": {"bq_name": "type", "bq_type": "STRING"},
     "level": {"bq_name": "level", "bq_type": "STRING"},

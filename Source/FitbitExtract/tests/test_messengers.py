@@ -38,3 +38,18 @@ def test_local_send_message(messenger, capsys) -> None:
 """
     assert captured.out == expected_value
     assert response == "success"
+
+
+def test_local_prep_message_all(messenger) -> None:
+    """test the prep_message method from LocalMessenger class"""
+    endpoints = ["all"]
+    user_id = "TESTUSER"
+    date = "2023-01-18"
+
+    messages = messenger.prep_message(endpoints, user_id, date)
+
+    expected_message = (
+        b'{"user_id": "TESTUSER", "date": "2023-01-18", "endpoints": ["all"]}'
+    )
+
+    assert messages == expected_message

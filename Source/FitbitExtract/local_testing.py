@@ -168,14 +168,18 @@ def testing_debug():
     transformer2.process(file2)
 
 
+def testing_delete_row():
+    loader = GCPDataLoader(PROJECT_ID, BUCKET_NAME, DATASET_NAME)
+    name = "summary"
+    table_name = f"{PROJECT_ID}.{DATASET_NAME}.{name}"
+
+    loader._delete_rows(table_name, "2023-02-06")
+
+
 if __name__ == "__main__":
     # fake_event = FakeEvent()
     # testing_main_transform_load(fake_event)
     # testing_pubsub_messenger()
     # testing_debug()
     # testing4()
-    import os
-
-    path = "C:\\Users\\JonathonCavalieri\\AppData\\Local\\Temp\\pytest-of-JonathonCavalieri\\pytest-246\\202301181/get_cardio_score_by_date_TESTUSER.json"
-    log_value = f"files_processed \{'date': '2023-01-18', 'user_id': 'TESTUSER', 'processed_date': '2023-02-03 12:31:38', 'api_endpoint': 'get_cardio_score_by_date', 'file_processed': '{path}'\}\n"
-    print(log_value)
+    testing_delete_row()

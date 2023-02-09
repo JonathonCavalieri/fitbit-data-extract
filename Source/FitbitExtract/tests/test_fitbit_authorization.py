@@ -155,12 +155,3 @@ def test_refresh_token_not_credentials(api_token) -> None:
 
     with pytest.raises(AttributeError, match="credentials attribute has not been set"):
         bad_local_token_mabager.refresh_token(api_token)
-
-
-############################################
-# Perform Tests on CloudTokenManager Class #
-############################################
-
-# def test_local_token_manager_default_init():
-#     local_token_manager = auth.LocalTokenManager()
-#     assert local_token_manager.parameters == auth.LocalTokenManagerParameters()
