@@ -10,11 +10,11 @@
 - [Learnings](#learnings)
 - [Future Enhancements](#future-enhancements)
 ## Background
-Typically my skill set has revolved around using Alteryx and SQL to build data pipelines in the past, for this project I wanted to advance my skill set in other areas. To that end this projects objective was to build a data engineering pipeline to improve my skills in python using cloud based technologies to run the code. My goal is follow better practices with building out python code such as using github and unit testing compared to previous where I have mostly built python within other applications.
+Typically, my skill set has revolved around using Alteryx and SQL to build data pipelines in the past, for this project I wanted to advance my skill set in other areas. To that end this project's objective was to build a data engineering pipeline to improve my skills in python using cloud based technologies to run the code. My goal is to follow better practices when building out python code such as using github and unit testing compared to previous times where I have mostly used python within other applications.
 
 To achieve this goal I researched several possible different APIs that I could use to be the source of the data for the project. I came to the decision that the [FitBit API](https://dev.fitbit.com/build/reference/web-api/) would work as an excellent choice as it provided many Oauth, several endpoints and would be useful to myself to track my own data.
 
-To summerise I will be building a batch processed, serverless data pipeline to extract transform and load my or any users Fitbit data into a database where it can be used for reporting. 
+To summarise I will be building a batch processed, serverless data pipeline to extract transform and load my or any users Fitbit data into a database where it can be used for reporting. 
 
 ## Design
 There are several constraints for this project:
@@ -38,11 +38,11 @@ Future State for reporting:
 - Reporting [Tableau](https://www.tableau.com/)
 <br>*note: google sheets will be used as it can refresh on tableau public*
 
-The general flow of how the pipline will run is as follows: <br>
+The general flow of how the pipeline will run is as follows: <br>
 1. Cloud scheduler sends message to PubSub
 2. PubSub Pushes message to Extract Cloud Function
 3. Extract Cloud Function runs
-   1. Gets Client id, secret and encryption token from  Secret Manager
+   1. Gets Client id, secret and encryption token from Secret Manager
    2. Refreshes user token with Fitbit API
    3. Calls all end points
    4. Saves response to Cloud Storage
@@ -58,7 +58,7 @@ The general flow of how the pipline will run is as follows: <br>
 ![image info](./Documents/Images/fitbit_diagram.png)
 
 ## Setup
-This project was developed in Visual Studio Code, with a new python virtual environment that was created to develop this locally and pytest library was installed to do unit testing. To make this quicker in future if this repo needs to be cloned to a new computer a [script](./Scripts/create_dev_env.ps1) was created that will create the environment and install all needed libraries 
+This project was developed in Visual Studio Code, with a new python virtual environment that was created to develop this locally and pytest library was installed to do unit testing. To make this quicker in future if this repo needs to be cloned to a new computer a [script](./Scripts/create_dev_env.ps1) was created that will create the environment and install all needed libraries. 
 
 ## Build
 Once the environment was setup I built out code with test cases along the way, I have tried to build it in an object oriented way by building out 2 modules. [fitbit module](./Source/FitbitExtract/fitbit) that contains all the needed objects to  authenticate, call, transform and load data for this project. [helper module](./Source/FitbitExtract/helper) contains several function used to make the main function simpler and be able to reuse the code for other sections.
@@ -78,7 +78,7 @@ One of the big parts of this project was to learn how to better test python code
 ![image info](./Documents/Images/coverage_report.png)
 
 ## GCP Setup and Deployment
-For this project I used several different services and had to create them in GCP using the console. Some of these I created a script to help out but many were manually created.
+For this project I used several different services and had to create them in GCP using the console. Some of these I created a script to help out, but many were manually created.
 
 Created the following and enabled any services that were needed to run them. In addition to this I had to give the compute service account access to these services where it didn't have them by default.
 - GCP project
@@ -89,7 +89,7 @@ Created the following and enabled any services that were needed to run them. In 
 - BigQuery Table
 - Several Secret Manger secrets
 
-Once all the needed services and objects have been created the zip file created in the build section is uploaded into cloud functions. At this point it is ready to be run, the last step was to create a cloud schedule that sends a message to PubSub to trigger the function each day
+Once all the needed services and objects have been created the zip file created in the build section is uploaded into cloud functions. At this point it is ready to be run, the last step was to create a cloud schedule that sends a message to PubSub to trigger the function each day.
 
 ## Learnings
 Through this project I have improved my skills in python, GCP and testings. I am sure that there are many spots where I could make improvements or there are better ways of doing it. But I think that I have made a big improvement to my python programming skills.
@@ -97,12 +97,12 @@ Through this project I have improved my skills in python, GCP and testings. I am
 Some of the things I learnt from through this are:<br>
 - Unit Testing takes a long time
 - By building tests I wrote better and more flexible code 
-- Testing and debugging cloud services is much harder than locally
+- Testing and debugging cloud services is much harder than doing it locally
 - GCP make it easy to deploy applications like this
 
 ## Future Enhancements
 ### Automated Deployment <!-- omit from toc -->
-One of the pain points while iterating of this was that I had to manually go in and upload the zip file each time I needed to make a change to each of the cloud functions. In the future I would like to build and automated deployment pipeline using github actions that will automatically run the unit tests then deploy the python code to GCP.
+One of the pain points while iterating of this was that I had to manually go in and upload the zip file each time I needed to make a change to each of the cloud functions. In the future I would like to build an automated deployment pipeline using github actions that will automatically run the unit tests, then deploy the python code to GCP.
 ### Logging and Alerts <!-- omit from toc -->
 Currently only default logging is done. In the future I would like to build in more custom logging in the cloud function code that could then be used in Alerts to better track the health of the pipeline
 ### Reporting <!-- omit from toc -->
