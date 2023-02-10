@@ -1,5 +1,7 @@
+import sys
 import webbrowser
 
+sys.path.append("Source/FitbitExtract")
 from fitbit.authorization import FitbitToken, LocalTokenManager, CloudTokenManager
 from fitbit.local_authorization import (
     generate_authorization_request,
