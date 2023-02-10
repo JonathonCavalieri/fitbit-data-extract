@@ -12,7 +12,7 @@
 ## Background
 Typically, my skill set has revolved around using Alteryx and SQL to build data pipelines in the past, for this project I wanted to advance my skill set in other areas. To that end this project's objective was to build a data engineering pipeline to improve my skills in python using cloud based technologies to run the code. My goal is to follow better practices when building out python code such as using github and unit testing compared to previous times where I have mostly used python within other applications.
 
-To achieve this goal I researched several possible different APIs that I could use to be the source of the data for the project. I came to the decision that the [FitBit API](https://dev.fitbit.com/build/reference/web-api/) would work as an excellent choice as it provided many Oauth, several endpoints and would be useful to myself to track my own data.
+To achieve this goal I researched several possible different APIs that I could use to be the source of the data for the project. I came to the decision that the [FitBit API](https://dev.fitbit.com/build/reference/web-api/) would work as an excellent choice as it provided Oauth authentication, several endpoints and would be useful to myself to track my own data.
 
 To summarise I will be building a batch processed, serverless data pipeline to extract transform and load my or any users Fitbit data into a database where it can be used for reporting. 
 
